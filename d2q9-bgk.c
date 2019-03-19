@@ -151,6 +151,7 @@ cl_device_id selectOpenCLDevice();
 */
 int main(int argc, char* argv[])
 {
+  printf("DO u even get here?");
   char*    paramfile = NULL;    /* name of the input parameter file */
   char*    obstaclefile = NULL; /* name of a the input obstacle file */
   t_param  params;              /* struct to hold parameter values */
