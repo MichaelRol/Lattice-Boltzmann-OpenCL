@@ -90,6 +90,7 @@ typedef struct
   cl_program program;
   cl_kernel  accelerate_flow;
   cl_kernel  propagate;
+  cl_kernel  rebound;
 
   cl_mem cells;
   cl_mem tmp_cells;
