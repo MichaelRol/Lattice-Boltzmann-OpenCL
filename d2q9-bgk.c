@@ -315,19 +315,19 @@ int propagate(const t_param params, t_speed* cells, t_speed* tmp_cells, t_ocl oc
 int rebound(const t_param params, t_speed* cells, t_speed* tmp_cells, int* obstacles, t_ocl ocl)
 {
 
-  // cl_int err;
+  cl_int err;
 
-  // // Set kernel arguments
-  // err = clSetKernelArg(ocl.rebound, 0, sizeof(cl_mem), &ocl.cells);
-  // checkError(err, "setting rebound arg 0", __LINE__);
-  // err = clSetKernelArg(ocl.rebound, 1, sizeof(cl_mem), &ocl.tmp_cells);
-  // checkError(err, "setting rebound arg 1", __LINE__);
-  // err = clSetKernelArg(ocl.rebound, 2, sizeof(cl_mem), &ocl.obstacles);
-  // checkError(err, "setting rebound arg 2", __LINE__);
-  // err = clSetKernelArg(ocl.rebound, 3, sizeof(cl_int), &params.nx);
-  // checkError(err, "setting rebound arg 3", __LINE__);
-  // err = clSetKernelArg(ocl.rebound, 4, sizeof(cl_int), &params.ny);
-  // checkError(err, "setting rebound arg 4", __LINE__);
+  // Set kernel arguments
+  err = clSetKernelArg(ocl.rebound, 0, sizeof(cl_mem), &ocl.cells);
+  checkError(err, "setting rebound arg 0", __LINE__);
+  err = clSetKernelArg(ocl.rebound, 1, sizeof(cl_mem), &ocl.tmp_cells);
+  checkError(err, "setting rebound arg 1", __LINE__);
+  err = clSetKernelArg(ocl.rebound, 2, sizeof(cl_mem), &ocl.obstacles);
+  checkError(err, "setting rebound arg 2", __LINE__);
+  err = clSetKernelArg(ocl.rebound, 3, sizeof(cl_int), &params.nx);
+  checkError(err, "setting rebound arg 3", __LINE__);
+  err = clSetKernelArg(ocl.rebound, 4, sizeof(cl_int), &params.ny);
+  checkError(err, "setting rebound arg 4", __LINE__);
 
   // // Enqueue kernel
   // size_t global[2] = {params.nx, params.ny};
