@@ -327,40 +327,40 @@ int rebound(const t_param params, t_speed* cells, t_speed* tmp_cells, int* obsta
   err = clSetKernelArg(ocl.rebound, 3, sizeof(cl_int), &params.nx);
   checkError(err, "setting rebound arg 3", __LINE__);
 
-  // // Enqueue kernel
-  // size_t global[2] = {params.nx, params.ny};
-  // err = clEnqueueNDRangeKernel(ocl.queue, ocl.rebound,
-  //                              2, NULL, global, NULL, 0, NULL, NULL);
-  // checkError(err, "enqueueing rebound kernel", __LINE__);
+  // Enqueue kernel
+  size_t global[2] = {params.nx, params.ny};
+  err = clEnqueueNDRangeKernel(ocl.queue, ocl.rebound,
+                               2, NULL, global, NULL, 0, NULL, NULL);
+  checkError(err, "enqueueing rebound kernel", __LINE__);
 
-  // // Wait for kernel to finish
-  // err = clFinish(ocl.queue);
-  // checkError(err, "waiting for rebound kernel", __LINE__);
-
-  // return EXIT_SUCCESS;
-  /* loop over the cells in the grid */
-  for (int jj = 0; jj < params.ny; jj++)
-  {
-    for (int ii = 0; ii < params.nx; ii++)
-    {
-      /* if the cell contains an obstacle */
-      if (obstacles[jj*params.nx + ii])
-      {
-        /* called after propagate, so taking values from scratch space
-        ** mirroring, and writing into main grid */
-        cells[ii + jj*params.nx].speeds[1] = tmp_cells[ii + jj*params.nx].speeds[3];
-        cells[ii + jj*params.nx].speeds[2] = tmp_cells[ii + jj*params.nx].speeds[4];
-        cells[ii + jj*params.nx].speeds[3] = tmp_cells[ii + jj*params.nx].speeds[1];
-        cells[ii + jj*params.nx].speeds[4] = tmp_cells[ii + jj*params.nx].speeds[2];
-        cells[ii + jj*params.nx].speeds[5] = tmp_cells[ii + jj*params.nx].speeds[7];
-        cells[ii + jj*params.nx].speeds[6] = tmp_cells[ii + jj*params.nx].speeds[8];
-        cells[ii + jj*params.nx].speeds[7] = tmp_cells[ii + jj*params.nx].speeds[5];
-        cells[ii + jj*params.nx].speeds[8] = tmp_cells[ii + jj*params.nx].speeds[6];
-      }
-    }
-  }
+  // Wait for kernel to finish
+  err = clFinish(ocl.queue);
+  checkError(err, "waiting for rebound kernel", __LINE__);
 
   return EXIT_SUCCESS;
+  // /* loop over the cells in the grid */
+  // for (int jj = 0; jj < params.ny; jj++)
+  // {
+  //   for (int ii = 0; ii < params.nx; ii++)
+  //   {
+  //     /* if the cell contains an obstacle */
+  //     if (obstacles[jj*params.nx + ii])
+  //     {
+  //       /* called after propagate, so taking values from scratch space
+  //       ** mirroring, and writing into main grid */
+  //       cells[ii + jj*params.nx].speeds[1] = tmp_cells[ii + jj*params.nx].speeds[3];
+  //       cells[ii + jj*params.nx].speeds[2] = tmp_cells[ii + jj*params.nx].speeds[4];
+  //       cells[ii + jj*params.nx].speeds[3] = tmp_cells[ii + jj*params.nx].speeds[1];
+  //       cells[ii + jj*params.nx].speeds[4] = tmp_cells[ii + jj*params.nx].speeds[2];
+  //       cells[ii + jj*params.nx].speeds[5] = tmp_cells[ii + jj*params.nx].speeds[7];
+  //       cells[ii + jj*params.nx].speeds[6] = tmp_cells[ii + jj*params.nx].speeds[8];
+  //       cells[ii + jj*params.nx].speeds[7] = tmp_cells[ii + jj*params.nx].speeds[5];
+  //       cells[ii + jj*params.nx].speeds[8] = tmp_cells[ii + jj*params.nx].speeds[6];
+  //     }
+  //   }
+  // }
+
+  // return EXIT_SUCCESS;
 }
 
 int collision(const t_param params, t_speed* cells, t_speed* tmp_cells, int* obstacles, t_ocl ocl)
@@ -728,6 +728,8 @@ int initialise(const char* paramfile, const char* obstaclefile,
   checkError(err, "creating accelerate_flow kernel", __LINE__);
   ocl->propagate = clCreateKernel(ocl->program, "propagate", &err);
   checkError(err, "creating propagate kernel", __LINE__);
+  ocl->rebound = clCreateKernel(ocl->program, "rebound", &err);
+  checkError(err, "creating rebound kernel", __LINE__);
 
   // Allocate OpenCL buffers
   ocl->cells = clCreateBuffer(
