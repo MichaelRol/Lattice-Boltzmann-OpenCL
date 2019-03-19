@@ -93,3 +93,11 @@ kernel void rebound(global t_speed* cells,
     cells[ii + jj*nx].speeds[8] = tmp_cells[ii + jj*nx].speeds[6];
   }
 }
+
+kernel void collision(global t_speed* cells,
+                      global t_speed* tmp_cells,
+                      global int* obstacles,
+                      int nx)
+{
+  
+}
