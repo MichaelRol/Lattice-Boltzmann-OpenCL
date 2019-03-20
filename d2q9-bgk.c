@@ -91,7 +91,7 @@ typedef struct
   cl_kernel  accelerate_flow;
   cl_kernel  propagate;
   cl_kernel  rebound;
-  cl_kernal  collision;
+  cl_kernel  collision;
 
   cl_mem cells;
   cl_mem tmp_cells;
