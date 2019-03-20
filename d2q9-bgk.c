@@ -243,13 +243,13 @@ int timestep(const t_param params, t_speed* cells, t_speed* tmp_cells, int* obst
   rebound(params, cells, tmp_cells, obstacles, ocl);
   if (tt == 50){
   for (int x = 0; x < params.nx*params.ny; x++){
-      printf("%f", cells[x]);
+      printf("%f", ocl.cells[x]);
   }
   }
   collision(params, cells, tmp_cells, obstacles, ocl);
   if (tt == 50){
   for (int x = 0; x < params.nx*params.ny; x++){
-      printf("%f", cells[x]);
+      printf("%f", ocl.cells[x]);
   }
   }
       // Read cells from device
