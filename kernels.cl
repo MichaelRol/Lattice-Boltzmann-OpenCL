@@ -94,21 +94,22 @@ kernel void rebound(global t_speed* cells,
   }
 }
 
-__kernel void collision(__global t_speed* cells,
-                    __global t_speed* tmp_cells,
-                    __global int* obstacles,
-                    const int nx, const float omega)
+kernel void collision(global t_speed* cells,
+                    global t_speed* tmp_cells,
+                    global int* obstacles,
+                    int nx, float omega)
 {
   /* get column and row indices */
   int ii = get_global_id(0);
   int jj = get_global_id(1);
 
 
-  const float c_sq = 1.f / 3.f; /* square of speed of sound */
-  const float w0 = 4.f / 9.f;  /* weighting factor */
-  const float w1 = 1.f / 9.f;  /* weighting factor */
-  const float w2 = 1.f / 36.f; /* weighting factor */
+  float c_sq = 1.f / 3.f; /* square of speed of sound */
+  float w0 = 4.f / 9.f;  /* weighting factor */
+  float w1 = 1.f / 9.f;  /* weighting factor */
+  float w2 = 1.f / 36.f; /* weighting factor */
 
+/* don't consider occupied cells */
   if (!obstacles[ii + jj*nx])
   {
     /* compute local density total */
@@ -129,12 +130,12 @@ __kernel void collision(__global t_speed* cells,
                  / local_density;
     /* compute y velocity component */
     float u_y = (tmp_cells[ii + jj*nx].speeds[2]
-                  + tmp_cells[ii + jj*nx].speeds[5]
-                  + tmp_cells[ii + jj*nx].speeds[6]
-                  - (tmp_cells[ii + jj*nx].speeds[4]
-                     + tmp_cells[ii + jj*nx].speeds[7]
-                     + tmp_cells[ii + jj*nx].speeds[8]))
-                 / local_density;
+                + tmp_cells[ii + jj*nx].speeds[5]
+                + tmp_cells[ii + jj*nx].speeds[6]
+                - (tmp_cells[ii + jj*nx].speeds[4]
+                    + tmp_cells[ii + jj*nx].speeds[7]
+                    + tmp_cells[ii + jj*nx].speeds[8]))
+                / local_density;
 
      /* accumulate the norm of x- and y- velocity components */
      // local_tot_u[local_id_x + (local_size_x * local_id_y)] = (float)sqrt((u_x * u_x) + (u_y * u_y));
@@ -195,14 +196,4 @@ __kernel void collision(__global t_speed* cells,
                                               * (d_equ[kk] - tmp_cells[ii + jj*nx].speeds[kk]);
     }
   }
-  // } else {
-  //   /* don't accumulate the norm of x- and y- velocity components */
-  //   local_tot_u[local_id_x + (local_size_x * local_id_y)] = 0.f;
-  //   /* don't increase counter of inspected cells */
-  //   local_tot_cells[local_id_x + (local_size_x * local_id_y)] = 0;
-  // }
-  // setup barrier so whole work group is ready for reduction
-  // barrier(CLK_LOCAL_MEM_FENCE);
-  // reduceInt(local_tot_cells, global_tot_cells);
-  // reduceFloat(local_tot_u, global_tot_u);
 }
