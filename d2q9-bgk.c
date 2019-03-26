@@ -96,8 +96,8 @@ typedef struct
   cl_kernel  collision;
   cl_kernel  av_velocity;
 
-  cl_mem hold_cells;
-  cl_mem hold_u;
+  cl_mem partial_cells;
+  cl_mem partial_u;
   cl_mem cells;
   cl_mem tmp_cells;
   cl_mem obstacles;
@@ -388,22 +388,22 @@ float av_velocity(const t_param params, t_speed* cells, int* obstacles, t_ocl oc
   // Set kernel arguments
   err = clSetKernelArg(ocl.av_velocity, 0, sizeof(cl_mem), &ocl.cells);
   checkError(err, "setting av_velocity arg 0", __LINE__);
-  err = clSetKernelArg(ocl.av_velocity, 1, sizeof(int), &ocl.hold_cells);
+  err = clSetKernelArg(ocl.av_velocity, 1, sizeof(int), &params.nx);
   checkError(err, "setting av_velocity arg 1", __LINE__);
-  err = clSetKernelArg(ocl.av_velocity, 2, sizeof(int), &ocl.hold_u);
-  checkError(err, "snwork_groupsetting av_velocity arg 2", __LINE__);
-  err = clSetKernelArg(ocl.av_velocity, 3, sizeof(int) * &params.size_wkg, NULL);
-  checkError(err, "setting av_velocity arg 1", __LINE__);
-  err = clSetKernelArg(ocl.av_velocity, 4, sizeof(float) * params.size_wkg, NULL);
-  checkError(err, "snwork_groupsetting av_velocity arg 2", __LINE__);
-  err = clSetKernelArg(ocl.av_velocity, 5, sizeof(int), &params.nx);
-  checkError(err, "setting av_velocity arg 1", __LINE__);
-  err = clSetKernelArg(ocl.av_velocity, 6, sizeof(int), &params.ny);
-  checkError(err, "snwork_groupsetting av_velocity arg 2", __LINE__);
+  err = clSetKernelArg(ocl.av_velocity, 2, sizeof(int), &params.ny);
+  checkError(err, "setting av_velocity arg 2", __LINE__);
+  err = clSetKernelArg(ocl.av_velocity, 3, sizeof(int) * params.size_wkg, NULL);
+  checkError(err, "setting av_velocity arg 3", __LINE__);
+  err = clSetKernelArg(ocl.av_velocity, 4, sizeof(int) * params.size_wkg, NULL);
+  checkError(err, "setting av_velocity arg 4", __LINE__);
+  err = clSetKernelArg(ocl.av_velocity, 5, sizeof(int), &ocl.partial_cells);
+  checkError(err, "setting av_velocity arg 5", __LINE__);
+  err = clSetKernelArg(ocl.av_velocity, 6, sizeof(int), &ocl.partial_u);
+  checkError(err, "setting av_velocity arg 6", __LINE__);
 
   // Enqueue kernel
   size_t global[2] = {params.nx, params.ny};
-  size_t local[2] = {(params.nx/params.num_wkg), params.ny};
+  size_t local[2] = {32, 32};
   err = clEnqueueNDRangeKernel(ocl.queue, ocl.av_velocity,
                                2, NULL, global, local, 0, NULL, NULL);
   checkError(err, "enqueueing av_velocity kernel", __LINE__);
@@ -413,11 +413,11 @@ float av_velocity(const t_param params, t_speed* cells, int* obstacles, t_ocl oc
   checkError(err, "waiting for av_velocity kernel", __LINE__);
 
   err = clEnqueueReadBuffer(
-    ocl.queue, ocl.hold_cells, CL_TRUE, 0,
+    ocl.queue, ocl.partial_cells, CL_TRUE, 0,
     sizeof(int) * params.num_wkg, sum_cells, 0, NULL, NULL);
   checkError(err, "Reading back partial_tot_cells", __LINE__);
   err = clEnqueueReadBuffer(
-    ocl.queue, ocl.hold_u, CL_TRUE, 0,
+    ocl.queue, ocl.partial_u, CL_TRUE, 0,
     sizeof(float) * params.num_wkg, sum_u, 0, NULL, NULL);
   checkError(err, "Reading back partial_tot_u", __LINE__);
     
@@ -711,19 +711,19 @@ int initialise(const char* paramfile, const char* obstaclefile,
   ocl->tmp_cells = clCreateBuffer(
     ocl->context, CL_MEM_READ_WRITE,
     sizeof(t_speed) * params->nx * params->ny, NULL, &err);
-  checkError(err, "creating tmp_cells buffer", __LINE__);
+  checkError(err, "creating tmp_cells buffer", __LINE__);W
   ocl->obstacles = clCreateBuffer(
     ocl->context, CL_MEM_READ_WRITE,
     sizeof(cl_int) * params->nx * params->ny, NULL, &err);
   checkError(err, "creating obstacles buffer", __LINE__);
-  ocl->hold_cells = clCreateBuffer(
+  ocl->partial_cells = clCreateBuffer(
     ocl->context, CL_MEM_WRITE_ONLY,
     sizeof(int) * params->num_wkg, NULL, &err);
   checkError(err, "creating buffer for hold_celss", __LINE__);
-  ocl->hold_u = clCreateBuffer(
+  ocl->partial_u = clCreateBuffer(
     ocl->context, CL_MEM_WRITE_ONLY,
     sizeof(float) * params->num_wkg, NULL, &err);
-  checkError(err, "creating buffer for hold_u", __LINE__);
+  checkError(err, "creating buffer for partial_u", __LINE__);
 
 
   return EXIT_SUCCESS;

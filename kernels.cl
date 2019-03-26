@@ -7,51 +7,6 @@ typedef struct
   float speeds[NSPEEDS];
 } t_speed;
 
-void reduceU(                                          
-   __local  float*    local_sums,                          
-   __global float*    partial_sums)                        
-{                                                          
-   int num_wrk_itemsX  = get_local_size(0);                 
-   int num_wrk_itemY  = get_local_size(0);                 
-   int local_id       = get_local_id(0);                     
-   int group_id       = get_group_id(0);                   
-   
-   float sum;                              
-   int i;                                      
-   
-   if (local_id == 0) {                      
-      sum = 0.0f;                            
-   
-      for (i=0; i<num_wrk_itemsX * num_wrk_itemY; i++) {        
-          sum += local_sums[i];             
-      }                                     
-   
-      partial_sums[group_id] = sum;         
-   }
-}
-
-void reduceCells(                                          
-   __local  int*    local_sums,                          
-   __global int*    partial_sums)                        
-{                                                          
-   int num_wrk_itemsX  = get_local_size(0);                 
-   int num_wrk_itemY  = get_local_size(0);                  
-   int local_id       = get_local_id(0);                   
-   int group_id       = get_group_id(0);                   
-   
-   int sum;                              
-   int i;                                      
-   
-   if (local_id == 0) {                      
-      sum = 0;                            
-   
-      for (i=0; i<num_wrk_itemsX * num_wrk_itemY; i++) {        
-          sum += local_sums[i];             
-      }                                     
-   
-      partial_sums[group_id] = sum;         
-   }
-}
 kernel void accelerate_flow(global t_speed* cells,
                             global int* obstacles,
                             int nx, int ny,
@@ -182,11 +137,6 @@ kernel void collision(global t_speed* cells,
                     + tmp_cells[ii + jj*nx].speeds[8]))
                 / local_density;
 
-     /* accumulate the norm of x- and y- velocity components */
-     // local_tot_u[local_id_x + (local_size_x * local_id_y)] = (float)sqrt((u_x * u_x) + (u_y * u_y));
-     // /* increase counter of inspected cells */
-     // local_tot_cells[local_id_x + (local_size_x * local_id_y)] = 1;
-
     /* velocity squared */
     float u_sq = u_x * u_x + u_y * u_y;
 
@@ -244,11 +194,21 @@ kernel void collision(global t_speed* cells,
 }
 
 kernel void av_velocity(global t_speed* cells,
-                      int nx, int ny)
+                      int nx, int ny,
+                      local int* local_cells,
+                      local float* local_u,)
+                      global int* partial_cells,
+                      global float* partial_u,
 {
   /* get column and row indices */
   int ii = get_global_id(0);
   int jj = get_global_id(1);
+  int local_idX = get_local_id(0);
+  int local_idY = get_local_id(1);
+  int num_wrk_itemsX = get_local_size(0);
+  int num_wrk_itemsY = get_local_size(1);
+  int group_idX = get_group_id(0);
+  int group_idY = get_group_id(1);
  /* ignore occupied cells */
   if (!obstacles[ii + jj*nx])
   {
@@ -281,5 +241,22 @@ kernel void av_velocity(global t_speed* cells,
     tot_u += sqrtf((u_x * u_x) + (u_y * u_y));
     /* increase counter of inspected cells */
     ++tot_cells;
+
+    barrier(CLK_LOCAL_MEM_FENCE);
+
+    int cellSum;
+    float uSum;
+
+    if (local_idX == 0 && local_idY == 0) {
+      cellSum = 0;                            
+      uSum = 0f;
+      for (int i=0; i<num_wrk_itemsX * num_wrk_itemY; i++) {        
+          cellSum += local_cells[i];
+          uSum += local_u[i];             
+      }                                     
+      partial_cells[group_idX + ((nx / num_wrk_itemsX) * group_idY)] = sumCells;
+      partial_u[group_idX + ((nx / num_wrk_itemsX) * group_idY)] = sumU;   
+   }
+
   }
 }
