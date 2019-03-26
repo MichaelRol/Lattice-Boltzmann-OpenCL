@@ -196,7 +196,7 @@ kernel void collision(global t_speed* cells,
 kernel void av_velocity(global t_speed* cells,
                       int nx, int ny,
                       local int* local_cells,
-                      local float* local_u,)
+                      local float* local_u,
                       global int* partial_cells,
                       global float* partial_u,
 {
