@@ -198,7 +198,7 @@ kernel void av_velocity(global t_speed* cells,
                       local int* local_cells,
                       local float* local_u,
                       global int* partial_cells,
-                      global float* partial_u,
+                      global float* partial_u)
 {
   /* get column and row indices */
   int ii = get_global_id(0);
