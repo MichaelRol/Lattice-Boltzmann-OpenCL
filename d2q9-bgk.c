@@ -388,18 +388,20 @@ float av_velocity(const t_param params, t_speed* cells, int* obstacles, t_ocl oc
   // Set kernel arguments
   err = clSetKernelArg(ocl.av_velocity, 0, sizeof(cl_mem), &ocl.cells);
   checkError(err, "setting av_velocity arg 0", __LINE__);
-  err = clSetKernelArg(ocl.av_velocity, 1, sizeof(int), &params.nx);
-  checkError(err, "setting av_velocity arg 1", __LINE__);
-  err = clSetKernelArg(ocl.av_velocity, 2, sizeof(int), &params.ny);
+  err = clSetKernelArg(ocl.collision, 1, sizeof(cl_mem), &ocl.obstacles);
+  checkError(err, "setting collision arg 1", __LINE__);
+  err = clSetKernelArg(ocl.av_velocity, 2, sizeof(int), &params.nx);
   checkError(err, "setting av_velocity arg 2", __LINE__);
-  err = clSetKernelArg(ocl.av_velocity, 3, sizeof(int) * params.size_wkg, NULL);
+  err = clSetKernelArg(ocl.av_velocity, 3, sizeof(int), &params.ny);
   checkError(err, "setting av_velocity arg 3", __LINE__);
   err = clSetKernelArg(ocl.av_velocity, 4, sizeof(int) * params.size_wkg, NULL);
   checkError(err, "setting av_velocity arg 4", __LINE__);
-  err = clSetKernelArg(ocl.av_velocity, 5, sizeof(int), &ocl.partial_cells);
+  err = clSetKernelArg(ocl.av_velocity, 5, sizeof(int) * params.size_wkg, NULL);
   checkError(err, "setting av_velocity arg 5", __LINE__);
-  err = clSetKernelArg(ocl.av_velocity, 6, sizeof(int), &ocl.partial_u);
+  err = clSetKernelArg(ocl.av_velocity, 6, sizeof(int), &ocl.partial_cells);
   checkError(err, "setting av_velocity arg 6", __LINE__);
+  err = clSetKernelArg(ocl.av_velocity, 7, sizeof(int), &ocl.partial_u);
+  checkError(err, "setting av_velocity arg 7", __LINE__);
 
   // Enqueue kernel
   size_t global[2] = {params.nx, params.ny};
