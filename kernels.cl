@@ -239,23 +239,24 @@ kernel void av_velocity(global t_speed* cells,
                       + cells[ii + jj*nx].speeds[8]))
                   / local_density;
     /* accumulate the norm of x- and y- velocity components */
-    tot_u += (float)sqrt((u_x * u_x) + (u_y * u_y));
+    // tot_u += (float)sqrt((u_x * u_x) + (u_y * u_y));
+    local_u[local_idX + (num_wrk_itemsX * local_idY)] = (float)sqrt((u_x * u_x) + (u_y * u_y));
     /* increase counter of inspected cells */
-    ++tot_cells;
+    local_cells[local_idX + (num_wrk_itemsX * local_idY)] = 1;
 
     barrier(CLK_LOCAL_MEM_FENCE);
 
-    int sumCells;
+    int cellsSum;
     float uSum;
 
     if (local_idX == 0 && local_idY == 0) {
       cellSum = 0;                            
       uSum = 0.f;
       for (int i=0; i<num_wrk_itemsX * num_wrk_itemsY; i++) {        
-          cellSum += local_cells[i];
+          cellsSum += local_cells[i];
           uSum += local_u[i];             
       }                                     
-      partial_cells[group_idX + ((nx / num_wrk_itemsX) * group_idY)] = sumCells;
+      partial_cells[group_idX + ((nx / num_wrk_itemsX) * group_idY)] = cellsSum;
       partial_u[group_idX + ((nx / num_wrk_itemsX) * group_idY)] = uSum;   
    }
 
