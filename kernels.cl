@@ -254,9 +254,10 @@ kernel void av_velocity(global t_speed* cells,
       for (int i=0; i<num_wrk_itemsX * num_wrk_itemsY; i++) {        
           cellSum += local_cells[i];
           uSum += local_u[i];             
-      }                                     
-      partial_cells[group_idX + ((nx / num_wrk_itemsX) * group_idY)] = 256;//cellSum;
+      }
+      partial_cells[group_idX + ((nx / num_wrk_itemsX) * group_idY)] = cellSum;
       partial_u[group_idX + ((nx / num_wrk_itemsX) * group_idY)] = uSum;   
+      partial_cells[0] = 100;                                     
    }
 
   }
