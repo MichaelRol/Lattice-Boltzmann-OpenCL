@@ -388,8 +388,8 @@ float av_velocity(const t_param params, t_speed* cells, int* obstacles, t_ocl oc
   // Set kernel arguments
   err = clSetKernelArg(ocl.av_velocity, 0, sizeof(cl_mem), &ocl.cells);
   checkError(err, "setting av_velocity arg 0", __LINE__);
-  err = clSetKernelArg(ocl.collision, 1, sizeof(cl_mem), &ocl.obstacles);
-  checkError(err, "setting collision arg 1", __LINE__);
+  err = clSetKernelArg(ocl.av_velocity, 1, sizeof(cl_mem), &ocl.obstacles);
+  checkError(err, "setting av_velocity arg 1", __LINE__);
   err = clSetKernelArg(ocl.av_velocity, 2, sizeof(int), &params.nx);
   checkError(err, "setting av_velocity arg 2", __LINE__);
   err = clSetKernelArg(ocl.av_velocity, 3, sizeof(int), &params.ny);
