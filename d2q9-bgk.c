@@ -431,7 +431,7 @@ float av_velocity(const t_param params, t_speed* cells, int* obstacles, t_ocl oc
 
   free(sum_cells);
   free(sum_u);
-  print(tot_cells);
+  printf("%d\n", tot_cells);
   return tot_u / (float)tot_cells;
 
 }
