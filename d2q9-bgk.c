@@ -202,14 +202,6 @@ int main(int argc, char* argv[])
     sizeof(cl_int) * params.nx * params.ny, obstacles, 0, NULL, NULL);
   checkError(err, "writing obstacles data", __LINE__);
 
-  int count = 0;
-  for(int i = 0; i < params.nx * params.ny + 1; i++){
-    if (!obstacles[i]){
-      count++;
-    }
-  }
-  printf("%d\n", count);
-
   for (int tt = 0; tt < params.maxIters; tt++)
   {
     timestep(params, cells, tmp_cells, obstacles, ocl);
@@ -718,7 +710,7 @@ int initialise(const char* paramfile, const char* obstaclefile,
   checkError(err, "Getting kernel work group info", __LINE__);
 
   params->num_wkg = (params->nx * params->ny) / params->size_wkg;
-  printf("num_wkg: %d, size_wkg: %d\n", params->num_wkg, params->size_wkg);
+  // printf("num_wkg: %d, size_wkg: %d\n", params->num_wkg, params->size_wkg);
 
   // Allocate OpenCL buffers
   ocl->cells = clCreateBuffer(
