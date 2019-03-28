@@ -203,7 +203,7 @@ int main(int argc, char* argv[])
   checkError(err, "writing obstacles data", __LINE__);
 
   int count = 0;
-  for(int i = 0; i < sizeof(obstacles)/sizeof(obstacles[0]); i++){
+  for(int i = 0; i < params.nx * params.ny; i++){
     if (!obstacles[i]){
       count++;
     }
