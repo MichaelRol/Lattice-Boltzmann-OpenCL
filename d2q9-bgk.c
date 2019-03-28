@@ -224,7 +224,7 @@ int main(int argc, char* argv[])
   /* write final values and free memory */
   printf("==done==\n");
   printf("Reynolds number:\t\t%.12E\n", calc_reynolds(params, cells, obstacles, ocl));
-  printf("Elapsed time:\t\t\t%.6lf (s)\n", toc - tic);
+  printf("Elapsed time:\t\t\t%.6lf (s)\n", toc - tic);get_group_id
   printf("Elapsed user CPU time:\t\t%.6lf (s)\n", usrtim);
   printf("Elapsed system CPU time:\t%.6lf (s)\n", systim);
   write_values(params, cells, obstacles, av_vels);
@@ -433,52 +433,6 @@ float av_velocity(const t_param params, t_speed* cells, int* obstacles, t_ocl oc
   free(sum_u);
 
   return tot_u / (float)tot_cells;
-
-//   int    tot_cells = 0;  /* no. of cells used in calculation */
-//   float tot_u;          /* accumulated magnitudes of velocity for each cell */
-
-//   /* initialise */
-//   tot_u = 0.f;
-
-//   /* loop over all non-blocked cells */
-//   for (int jj = 0; jj < params.ny; jj++)
-//   {
-//     for (int ii = 0; ii < params.nx; ii++)
-//     {
-//       /* ignore occupied cells */
-//       if (!obstacles[ii + jj*params.nx])
-//       {
-//         /* local density total */
-//         float local_density = 0.f;
-
-//         for (int kk = 0; kk < NSPEEDS; kk++)
-//         {
-//           local_density += cells[ii + jj*params.nx].speeds[kk];
-//         }
-
-//         /* x-component of velocity */
-//         float u_x = (cells[ii + jj*params.nx].speeds[1]
-//                       + cells[ii + jj*params.nx].speeds[5]
-//                       + cells[ii + jj*params.nx].speeds[8]
-//                       - (cells[ii + jj*params.nx].speeds[3]
-//                          + cells[ii + jj*params.nx].speeds[6]
-//                          + cells[ii + jj*params.nx].speeds[7]))
-//                      / local_density;
-//         /* compute y velocity component */
-//         float u_y = (cells[ii + jj*params.nx].speeds[2]
-//                       + cells[ii + jj*params.nx].speeds[5]
-//                       + cells[ii + jj*params.nx].speeds[6]
-//                       - (cells[ii + jj*params.nx].speeds[4]
-//                          + cells[ii + jj*params.nx].speeds[7]
-//                          + cells[ii + jj*params.nx].speeds[8]))
-//                      / local_density;
-//         /* accumulate the norm of x- and y- velocity components */
-//         tot_u += sqrtf((u_x * u_x) + (u_y * u_y));
-//         /* increase counter of inspected cells */
-//         ++tot_cells;
-//       }
-//     }
-//   }
 
 }
 
