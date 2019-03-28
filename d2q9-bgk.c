@@ -761,7 +761,7 @@ int finalise(const t_param* params, t_speed** cells_ptr, t_speed** tmp_cells_ptr
   clReleaseCommandQueue(ocl.queue);
   clReleaseContext(ocl.context);
   clReleaseMemObject(ocl.partial_cells);
-  clReleaseMemObject(ocl.partial_);
+  clReleaseMemObject(ocl.partial_u);
 
   return EXIT_SUCCESS;
 }
