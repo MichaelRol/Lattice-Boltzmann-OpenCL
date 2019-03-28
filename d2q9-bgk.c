@@ -417,11 +417,11 @@ float av_velocity(const t_param params, t_speed* cells, int* obstacles, t_ocl oc
   err = clEnqueueReadBuffer(
     ocl.queue, ocl.partial_cells, CL_TRUE, 0,
     sizeof(int) * params.num_wkg, sum_cells, 0, NULL, NULL);
-  checkError(err, "Reading back partial_tot_cells", __LINE__);
+  checkError(err, "Reading partial_cells", __LINE__);
   err = clEnqueueReadBuffer(
     ocl.queue, ocl.partial_u, CL_TRUE, 0,
     sizeof(float) * params.num_wkg, sum_u, 0, NULL, NULL);
-  checkError(err, "Reading back partial_tot_u", __LINE__);
+  checkError(err, "Reading partial_u", __LINE__);
     
   for (int x = 0; x < params.num_wkg; x++)
   {
@@ -721,7 +721,7 @@ int initialise(const char* paramfile, const char* obstaclefile,
   ocl->partial_cells = clCreateBuffer(
     ocl->context, CL_MEM_WRITE_ONLY,
     sizeof(int) * params->num_wkg, NULL, &err);
-  checkError(err, "creating buffer for hold_celss", __LINE__);
+  checkError(err, "creating buffer for partial_cells", __LINE__);
   ocl->partial_u = clCreateBuffer(
     ocl->context, CL_MEM_WRITE_ONLY,
     sizeof(float) * params->num_wkg, NULL, &err);
@@ -760,6 +760,8 @@ int finalise(const t_param* params, t_speed** cells_ptr, t_speed** tmp_cells_ptr
   clReleaseProgram(ocl.program);
   clReleaseCommandQueue(ocl.queue);
   clReleaseContext(ocl.context);
+  clReleaseMemObject(ocl.partial_cells);
+  clReleaseMemObject(ocl.partial_);
 
   return EXIT_SUCCESS;
 }
