@@ -202,6 +202,14 @@ int main(int argc, char* argv[])
     sizeof(cl_int) * params.nx * params.ny, obstacles, 0, NULL, NULL);
   checkError(err, "writing obstacles data", __LINE__);
 
+  int count = 0;
+  for(int i = 0; i < len(obstacles); i++){
+    if (!obstacles[i]){
+      count++;
+    }
+  }
+  printf("%d\n", count);
+
   for (int tt = 0; tt < params.maxIters; tt++)
   {
     timestep(params, cells, tmp_cells, obstacles, ocl);
@@ -431,7 +439,7 @@ float av_velocity(const t_param params, t_speed* cells, int* obstacles, t_ocl oc
 
   free(sum_cells);
   free(sum_u);
-  printf("%d\n", tot_cells);
+  // printf("%d\n", tot_cells);
   return tot_u / (float)tot_cells;
 
 }
