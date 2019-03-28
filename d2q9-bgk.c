@@ -718,7 +718,7 @@ int initialise(const char* paramfile, const char* obstaclefile,
   checkError(err, "Getting kernel work group info", __LINE__);
 
   params->num_wkg = (params->nx * params->ny) / params->size_wkg;
-  prinf("num_wkg: %d, size_wkg: %d\n", params->num_wkg, params->size_wkg);
+  printf("num_wkg: %d, size_wkg: %d\n", params->num_wkg, params->size_wkg);
 
   // Allocate OpenCL buffers
   ocl->cells = clCreateBuffer(
