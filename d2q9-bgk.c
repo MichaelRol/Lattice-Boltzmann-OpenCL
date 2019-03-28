@@ -426,7 +426,7 @@ float av_velocity(const t_param params, t_speed* cells, int* obstacles, t_ocl oc
   for (int x = 0; x < params.num_wkg; x++)
   {
       tot_cells += sum_cells[x];
-      printf("sum_cells[%d]: %d\n", x, sum_cells[x]);
+      printf("sum_cells[%d]: %d\n", x, sum_u[x]);
       tot_u += sum_u[x];
   }
   // printf("Num_wkg: %d\n", (int)params.num_wkg);
