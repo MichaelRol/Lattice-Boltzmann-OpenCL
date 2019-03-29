@@ -210,7 +210,7 @@ kernel void av_velocity(global t_speed* cells,
   int num_wrk_itemsY = get_local_size(1);
   int group_idX = get_group_id(0);
   int group_idY = get_group_id(1);
-  // printf("GroupX: %d, GroupY: %d", group_idX, group_idY);
+  
  /* ignore occupied cells */
   if (!obstacles[ii + jj*nx])
   {
@@ -240,7 +240,6 @@ kernel void av_velocity(global t_speed* cells,
                       + cells[ii + jj*nx].speeds[8]))
                   / local_density;
     /* accumulate the norm of x- and y- velocity components */
-    // tot_u += (float)sqrt((u_x * u_x) + (u_y * u_y));
     local_u[local_idX + (num_wrk_itemsX * local_idY)] = (float)pow(((u_x * u_x) + (u_y * u_y)), 0.5f);
     local_cells[local_idX + (num_wrk_itemsX * local_idY)] = 1;
 
@@ -256,11 +255,6 @@ kernel void av_velocity(global t_speed* cells,
           cellSum += local_cells[i];
           uSum += local_u[i];             
       }
-      //this seems not to touch 0-8
-      printf("Group ID X: %d\n", group_idX);
-      printf("Group ID Y: %d\n", group_idY);
-      printf("Index: %d\n", group_idX + ((nx / num_wrk_itemsX) * group_idY));
-
       partial_cells[group_idX + ((nx / num_wrk_itemsX) * group_idY)] = cellSum;
       partial_u[group_idX + ((nx / num_wrk_itemsX) * group_idY)] = uSum;                                       
    }
