@@ -216,9 +216,6 @@ kernel void av_velocity(global t_speed* cells,
   {
     /* local density total */
     float local_density = 0.f;
-    if (group_idX == 0) {
-      printf("It should work for fucks sake\n");
-    }
 
     for (int kk = 0; kk < NSPEEDS; kk++)
     {
@@ -253,6 +250,9 @@ kernel void av_velocity(global t_speed* cells,
     float uSum;
 
     if (local_idX == 0 && local_idY == 0) {
+      if (group_idX == 0) {
+        printf("It should work for fucks sake\n");
+      }
       cellSum = 0;                            
       uSum = 0.f;
       for (int i=0; i<num_wrk_itemsX * num_wrk_itemsY; i++) {        
