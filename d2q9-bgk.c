@@ -68,6 +68,10 @@
 #define AVVELSFILE      "av_vels.dat"
 #define OCLFILE         "kernels.cl"
 
+#define LOCAL_SIZE_X 16
+#define LOCAL_SIZE_Y 16
+
+
 /* struct to hold the parameter values */
 typedef struct
 {
@@ -405,7 +409,7 @@ float av_velocity(const t_param params, t_speed* cells, int* obstacles, t_ocl oc
 
   // Enqueue kernel
   size_t global[2] = {params.nx, params.ny};
-  size_t local[2] = {16, 16};
+  size_t local[2] = {LOCAL_SIZE_X, LOCAL_SIZE_Y};
   err = clEnqueueNDRangeKernel(ocl.queue, ocl.av_velocity,
                                2, NULL, global, local, 0, NULL, NULL);
   checkError(err, "enqueueing av_velocity kernel", __LINE__);
@@ -707,10 +711,11 @@ int initialise(const char* paramfile, const char* obstaclefile,
   ocl->av_velocity = clCreateKernel(ocl->program, "av_velocity", &err);
   checkError(err, "creating av_velocity kernel", __LINE__);
 
-  err = clGetKernelWorkGroupInfo (ocl->av_velocity, ocl->device, CL_KERNEL_WORK_GROUP_SIZE, sizeof(size_t), &params->size_wkg, NULL);
-  checkError(err, "Getting kernel work group info", __LINE__);
+  // err = clGetKernelWorkGroupInfo (ocl->av_velocity, ocl->device, CL_KERNEL_WORK_GROUP_SIZE, sizeof(size_t), &params->size_wkg, NULL);
+  // checkError(err, "Getting kernel work group info", __LINE__);
+  params->size_wkg = LOCAL_SIZE_X * LOCAL_SIZE_Y;
 
-  params->num_wkg = (params->nx * params->ny) / params->size_wkg;
+  params->num_wkg = (params->nx * params->ny) / LOCAL_SIZE_X * LOCAL_SIZE_Y;
   // printf("num_wkg: %d, size_wkg: %d\n", params->num_wkg, params->size_wkg);
 
   // Allocate OpenCL buffers
