@@ -250,9 +250,6 @@ kernel void av_velocity(global t_speed* cells,
     float uSum;
 
     if (local_idX == 1 && local_idY == 0) {
-      if (group_idX == 0) {
-        printf("It should work for fucks sake\n");
-      }
       cellSum = 0;                            
       uSum = 0.f;
       for (int i=0; i<num_wrk_itemsX * num_wrk_itemsY; i++) {        
@@ -264,7 +261,7 @@ kernel void av_velocity(global t_speed* cells,
       // printf("Group ID Y: %d\n", group_idY);
       // printf("Num work itemsX: %d\n", num_wrk_itemsX);
       // printf("nx: %d", nx);
-      // printf("Index: %d\n", group_idX + ((nx / num_wrk_itemsX) * group_idY));
+      printf("Index: %d\n", group_idX + ((nx / num_wrk_itemsX) * group_idY));
 
       partial_cells[group_idX + ((nx / num_wrk_itemsX) * group_idY)] = cellSum;
       partial_u[group_idX + ((nx / num_wrk_itemsX) * group_idY)] = uSum;                                       
