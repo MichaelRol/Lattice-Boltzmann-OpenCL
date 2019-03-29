@@ -210,6 +210,7 @@ kernel void av_velocity(global t_speed* cells,
   int num_wrk_itemsY = get_local_size(1);
   int group_idX = get_group_id(0);
   int group_idY = get_group_id(1);
+  printf("GroupX: %d, GroupY: %d", group_idX, group_idY);
  /* ignore occupied cells */
   if (!obstacles[ii + jj*nx])
   {
