@@ -249,7 +249,7 @@ kernel void av_velocity(global t_speed* cells,
     int cellSum;
     float uSum;
 
-    if (local_idX == 0 && local_idY == 0) {
+    if (local_idX == 1 && local_idY == 0) {
       if (group_idX == 0) {
         printf("It should work for fucks sake\n");
       }
