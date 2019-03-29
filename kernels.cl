@@ -249,7 +249,7 @@ kernel void av_velocity(global t_speed* cells,
     int cellSum;
     float uSum;
 
-    if (local_idX == 1 && local_idY == 0) {
+    if (local_idX == 1 && local_idY == 1) {
       cellSum = 0;                            
       uSum = 0.f;
       for (int i=0; i<num_wrk_itemsX * num_wrk_itemsY; i++) {        
