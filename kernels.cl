@@ -257,10 +257,8 @@ kernel void av_velocity(global t_speed* cells,
           uSum += local_u[i];             
       }
       //this seems not to touch 0-8
-      // printf("Group ID X: %d\n", group_idX);
-      // printf("Group ID Y: %d\n", group_idY);
-      // printf("Num work itemsX: %d\n", num_wrk_itemsX);
-      // printf("nx: %d", nx);
+      printf("Group ID X: %d\n", group_idX);
+      printf("Group ID Y: %d\n", group_idY);
       printf("Index: %d\n", group_idX + ((nx / num_wrk_itemsX) * group_idY));
 
       partial_cells[group_idX + ((nx / num_wrk_itemsX) * group_idY)] = cellSum;
