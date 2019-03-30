@@ -61,6 +61,19 @@ kernel void propagate(global t_speed* cells,
   int y_s = (jj == 0) ? (jj + ny - 1) : (jj - 1);
   int x_w = (ii == 0) ? (ii + nx - 1) : (ii - 1);
 
+  float c_sq = 1.f / 3.f; /* square of speed of sound */
+  float w0 = 4.f / 9.f;  /* weighting factor */
+  float w1 = 1.f / 9.f;  /* weighting factor */
+  float w2 = 1.f / 36.f; /* weighting factor */
+
+
+  int local_idX = get_local_id(0);
+  int local_idY = get_local_id(1);
+  int num_wrk_itemsX = get_local_size(0);
+  int num_wrk_itemsY = get_local_size(1);
+  int group_idX = get_group_id(0);
+  int group_idY = get_group_id(1);
+
   /* propagate densities from neighbouring cells, following
   ** appropriate directions of travel and writing into
   ** scratch space grid */
@@ -87,14 +100,7 @@ kernel void propagate(global t_speed* cells,
     cells[ii + jj*nx].speeds[7] = tmp_cells[ii + jj*nx].speeds[5];
     cells[ii + jj*nx].speeds[8] = tmp_cells[ii + jj*nx].speeds[6];
   }
-
-    float c_sq = 1.f / 3.f; /* square of speed of sound */
-  float w0 = 4.f / 9.f;  /* weighting factor */
-  float w1 = 1.f / 9.f;  /* weighting factor */
-  float w2 = 1.f / 36.f; /* weighting factor */
-
-/* don't consider occupied cells */
-  if (!obstacles[ii + jj*nx])
+  else
   {
     /* compute local density total */
     float local_density = 0.f;
@@ -174,18 +180,6 @@ kernel void propagate(global t_speed* cells,
                                               + omega
                                               * (d_equ[kk] - tmp_cells[ii + jj*nx].speeds[kk]);
     }
-  }
-
-    int local_idX = get_local_id(0);
-  int local_idY = get_local_id(1);
-  int num_wrk_itemsX = get_local_size(0);
-  int num_wrk_itemsY = get_local_size(1);
-  int group_idX = get_group_id(0);
-  int group_idY = get_group_id(1);
-  
- /* ignore occupied cells */
-  if (!obstacles[ii + jj*nx])
-  {
     /* local density total */
     float local_density = 0.f;
 
