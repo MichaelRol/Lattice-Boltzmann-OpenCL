@@ -208,7 +208,7 @@ int main(int argc, char* argv[])
 
   for (int tt = 0; tt < params.maxIters; tt++)
   {
-    av_vells[tt] = timestep(params, cells, tmp_cells, obstacles, ocl);
+    av_vels[tt] = timestep(params, cells, tmp_cells, obstacles, ocl);
     // av_vels[tt] = av_velocity(params, cells, obstacles, ocl);
 #ifdef DEBUG
     printf("==timestep: %d==\n", tt);
