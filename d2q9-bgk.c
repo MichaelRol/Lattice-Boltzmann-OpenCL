@@ -293,6 +293,11 @@ int accelerate_flow(const t_param params, t_speed* cells, int* obstacles, t_ocl 
 
 float propagate(const t_param params, t_speed* cells, t_speed* tmp_cells, t_ocl ocl)
 {
+  int tot_cells = 0;    /* no. of cells used in calculation */
+  float tot_u = 0.f;    /* accumulated magnitudes of velocity for each cell */
+
+  int* sum_cells = (int*)malloc(sizeof(int)  * params.num_wkg);
+  float* sum_u = (float*)malloc(sizeof(float)  * params.num_wkg);
   cl_int err;
 
   // Set kernel arguments
