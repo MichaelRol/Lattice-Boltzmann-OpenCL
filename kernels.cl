@@ -180,31 +180,7 @@ kernel void propagate(global t_speed* cells,
                                               + omega
                                               * (d_equ[kk] - tmp_cells[ii + jj*nx].speeds[kk]);
     }
-    /* local density total */
-    float local_density = 0.f;
 
-    for (int kk = 0; kk < NSPEEDS; kk++)
-    {
-
-      local_density += cells[ii + jj*nx].speeds[kk];
-    }
-
-    /* x-component of velocity */
-    float u_x = (cells[ii + jj*nx].speeds[1]
-                  + cells[ii + jj*nx].speeds[5]
-                  + cells[ii + jj*nx].speeds[8]
-                  - (cells[ii + jj*nx].speeds[3]
-                      + cells[ii + jj*nx].speeds[6]
-                      + cells[ii + jj*nx].speeds[7]))
-                  / local_density;
-    /* compute y velocity component */
-    float u_y = (cells[ii + jj*nx].speeds[2]
-                  + cells[ii + jj*nx].speeds[5]
-                  + cells[ii + jj*nx].speeds[6]
-                  - (cells[ii + jj*nx].speeds[4]
-                      + cells[ii + jj*nx].speeds[7]
-                      + cells[ii + jj*nx].speeds[8]))
-                  / local_density;
     /* accumulate the norm of x- and y- velocity components */
     local_u[local_idX + (num_wrk_itemsX * local_idY)] = (float)pow(((u_x * u_x) + (u_y * u_y)), 0.5f);
     local_cells[local_idX + (num_wrk_itemsX * local_idY)] = 1;
