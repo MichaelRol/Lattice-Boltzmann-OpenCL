@@ -68,8 +68,8 @@
 #define AVVELSFILE      "av_vels.dat"
 #define OCLFILE         "kernels.cl"
 
-#define LOCAL_SIZE_X 32
-#define LOCAL_SIZE_Y 32
+#define LOCAL_SIZE_X 16
+#define LOCAL_SIZE_Y 16
 
 
 /* struct to hold the parameter values */
@@ -129,7 +129,7 @@ int initialise(const char* paramfile, const char* obstaclefile,
 */
 int timestep(const t_param params, t_speed* cells, t_speed* tmp_cells, int* obstacles, t_ocl ocl);
 int accelerate_flow(const t_param params, t_speed* cells, int* obstacles, t_ocl ocl);
-int propagate(const t_param params, t_speed* cells, t_speed* tmp_cells, t_ocl ocl);
+float propagate(const t_param params, t_speed* cells, t_speed* tmp_cells, t_ocl ocl);
 int rebound(const t_param params, t_speed* cells, t_speed* tmp_cells, int* obstacles, t_ocl ocl);
 int collision(const t_param params, t_speed* cells, t_speed* tmp_cells, int* obstacles, t_ocl ocl);
 int write_values(const t_param params, t_speed* cells, int* obstacles, float* av_vels);
@@ -249,8 +249,8 @@ int timestep(const t_param params, t_speed* cells, t_speed* tmp_cells, int* obst
 
   accelerate_flow(params, cells, obstacles, ocl);
   propagate(params, cells, tmp_cells, ocl);
-  rebound(params, cells, tmp_cells, obstacles, ocl);
-  collision(params, cells, tmp_cells, obstacles, ocl);
+  // rebound(params, cells, tmp_cells, obstacles, ocl);
+  // collision(params, cells, tmp_cells, obstacles, ocl);
 
       // Read cells from device
   err = clEnqueueReadBuffer(
@@ -291,7 +291,7 @@ int accelerate_flow(const t_param params, t_speed* cells, int* obstacles, t_ocl 
   return EXIT_SUCCESS;
 }
 
-int propagate(const t_param params, t_speed* cells, t_speed* tmp_cells, t_ocl ocl)
+float propagate(const t_param params, t_speed* cells, t_speed* tmp_cells, t_ocl ocl)
 {
   cl_int err;
 
@@ -306,18 +306,49 @@ int propagate(const t_param params, t_speed* cells, t_speed* tmp_cells, t_ocl oc
   checkError(err, "setting propagate arg 3", __LINE__);
   err = clSetKernelArg(ocl.propagate, 4, sizeof(cl_int), &params.ny);
   checkError(err, "setting propagate arg 4", __LINE__);
+  err = clSetKernelArg(ocl.propagate, 5, sizeof(int), &params.omega);
+  checkError(err, "setting propagate arg 5", __LINE__);
+  err = clSetKernelArg(ocl.propagate, 6, sizeof(int) * params.size_wkg, NULL);
+  checkError(err, "setting propagate arg 6", __LINE__);
+  err = clSetKernelArg(ocl.propagate, 7, sizeof(float) * params.size_wkg, NULL);
+  checkError(err, "setting propagate arg 7", __LINE__);
+  err = clSetKernelArg(ocl.propagate, 8, sizeof(cl_mem), &ocl.partial_cells);
+  checkError(err, "setting propagate arg 8", __LINE__);
+  err = clSetKernelArg(ocl.propagate, 9, sizeof(cl_mem), &ocl.partial_u);
+  checkError(err, "setting av_velocity arg 9", __LINE__);
 
   // Enqueue kernel
+
+  size_t local[2] = {LOCAL_SIZE_X, LOCAL_SIZE_Y};
   size_t global[2] = {params.nx, params.ny};
   err = clEnqueueNDRangeKernel(ocl.queue, ocl.propagate,
-                               2, NULL, global, NULL, 0, NULL, NULL);
+                               2, NULL, global, local, 0, NULL, NULL);
   checkError(err, "enqueueing propagate kernel", __LINE__);
 
   // Wait for kernel to finish
   err = clFinish(ocl.queue);
   checkError(err, "waiting for propagate kernel", __LINE__);
 
-  return EXIT_SUCCESS;
+   err = clEnqueueReadBuffer(
+    ocl.queue, ocl.partial_cells, CL_TRUE, 0,
+    sizeof(int) * params.num_wkg, sum_cells, 0, NULL, NULL);
+  checkError(err, "Reading partial_cells", __LINE__);
+  err = clEnqueueReadBuffer(
+    ocl.queue, ocl.partial_u, CL_TRUE, 0,
+    sizeof(float) * params.num_wkg, sum_u, 0, NULL, NULL);
+  checkError(err, "Reading partial_u", __LINE__);
+    
+  for (int x = 0; x < params.num_wkg; x++)
+  {
+      tot_cells += sum_cells[x];
+      tot_u += sum_u[x];
+  }
+
+  free(sum_cells);
+  free(sum_u);
+  
+  return tot_u / (float)tot_cells;
+
 }
 
 int rebound(const t_param params, t_speed* cells, t_speed* tmp_cells, int* obstacles, t_ocl ocl)
