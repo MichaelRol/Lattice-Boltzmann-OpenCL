@@ -321,7 +321,7 @@ float propagate(const t_param params, t_speed* cells, t_speed* tmp_cells, t_ocl 
   err = clSetKernelArg(ocl.propagate, 8, sizeof(cl_mem), &ocl.partial_cells);
   checkError(err, "setting propagate arg 8", __LINE__);
   err = clSetKernelArg(ocl.propagate, 9, sizeof(cl_mem), &ocl.partial_u);
-  checkError(err, "setting av_velocity arg 9", __LINE__);
+  checkError(err, "setting av_velocity arg 9", __LINE__);adsada dasdsa 
 
   // Enqueue kernel
 
