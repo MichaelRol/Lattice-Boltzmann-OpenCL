@@ -43,36 +43,36 @@ kernel void accelerate_flow(global t_speed* cells,
 kernel void propagate(global t_speed* cells,
                       global t_speed* tmp_cells,
                       global int* obstacles,
-                      int nx, int ny,
-                      float omega, 
+                      const int nx, const int ny,
+                      const float omega, 
                       local int* local_cells,
                       local float* local_u,
                       global int* partial_cells,
                       global float* partial_u)
 {
   /* get column and row indices */
-  int ii = get_global_id(0);
-  int jj = get_global_id(1);
+  const int ii = get_global_id(0);
+  const int jj = get_global_id(1);
 
   /* determine indices of axis-direction neighbours
   ** respecting periodic boundary conditions (wrap around) */
-  int y_n = (jj + 1) % ny;
-  int x_e = (ii + 1) % nx;
-  int y_s = (jj == 0) ? (jj + ny - 1) : (jj - 1);
-  int x_w = (ii == 0) ? (ii + nx - 1) : (ii - 1);
+  const int y_n = (jj + 1) % ny;
+  const int x_e = (ii + 1) % nx;
+  const int y_s = (jj == 0) ? (jj + ny - 1) : (jj - 1);
+  const int x_w = (ii == 0) ? (ii + nx - 1) : (ii - 1);
 
-  float c_sq = 1.f / 3.f; /* square of speed of sound */
-  float w0 = 4.f / 9.f;  /* weighting factor */
-  float w1 = 1.f / 9.f;  /* weighting factor */
-  float w2 = 1.f / 36.f; /* weighting factor */
+  const float c_sq = 1.f / 3.f; /* square of speed of sound */
+  const float w0 = 4.f / 9.f;  /* weighting factor */
+  const float w1 = 1.f / 9.f;  /* weighting factor */
+  const float w2 = 1.f / 36.f; /* weighting factor */
 
 
-  int local_idX = get_local_id(0);
-  int local_idY = get_local_id(1);
-  int num_wrk_itemsX = get_local_size(0);
-  int num_wrk_itemsY = get_local_size(1);
-  int group_idX = get_group_id(0);
-  int group_idY = get_group_id(1);
+  const int local_idX = get_local_id(0);
+  const int local_idY = get_local_id(1);
+  const int num_wrk_itemsX = get_local_size(0);
+  const int num_wrk_itemsY = get_local_size(1);
+  const int group_idX = get_group_id(0);
+  const int group_idY = get_group_id(1);
 
   /* propagate densities from neighbouring cells, following
   ** appropriate directions of travel and writing into
@@ -86,6 +86,30 @@ kernel void propagate(global t_speed* cells,
   tmp_cells[ii + jj*nx].speeds[6] = cells[x_e + y_s*nx].speeds[6]; /* north-west */
   tmp_cells[ii + jj*nx].speeds[7] = cells[x_e + y_n*nx].speeds[7]; /* south-west */
   tmp_cells[ii + jj*nx].speeds[8] = cells[x_w + y_n*nx].speeds[8]; /* south-east */
+
+  /* compute local density total */
+  float local_density = 0.f;
+
+  for (int kk = 0; kk < NSPEEDS; kk++)
+  {
+    local_density += tmp_cells[ii + jj*nx].speeds[kk];
+  }
+  /* compute x velocity component */
+  float u_x = (tmp_cells[ii + jj*nx].speeds[1]
+                + tmp_cells[ii + jj*nx].speeds[5]
+                + tmp_cells[ii + jj*nx].speeds[8]
+                - (tmp_cells[ii + jj*nx].speeds[3]
+                    + tmp_cells[ii + jj*nx].speeds[6]
+                    + tmp_cells[ii + jj*nx].speeds[7]))
+                / local_density;
+  /* compute y velocity component */
+  float u_y = (tmp_cells[ii + jj*nx].speeds[2]
+              + tmp_cells[ii + jj*nx].speeds[5]
+              + tmp_cells[ii + jj*nx].speeds[6]
+              - (tmp_cells[ii + jj*nx].speeds[4]
+                  + tmp_cells[ii + jj*nx].speeds[7]
+                  + tmp_cells[ii + jj*nx].speeds[8]))
+              / local_density;
 
   if (obstacles[jj*nx + ii])
   {
@@ -102,33 +126,9 @@ kernel void propagate(global t_speed* cells,
   }
   else
   {
-    /* compute local density total */
-    float local_density = 0.f;
-
-    for (int kk = 0; kk < NSPEEDS; kk++)
-    {
-      local_density += tmp_cells[ii + jj*nx].speeds[kk];
-    }
-
-    /* compute x velocity component */
-    float u_x = (tmp_cells[ii + jj*nx].speeds[1]
-                  + tmp_cells[ii + jj*nx].speeds[5]
-                  + tmp_cells[ii + jj*nx].speeds[8]
-                  - (tmp_cells[ii + jj*nx].speeds[3]
-                     + tmp_cells[ii + jj*nx].speeds[6]
-                     + tmp_cells[ii + jj*nx].speeds[7]))
-                 / local_density;
-    /* compute y velocity component */
-    float u_y = (tmp_cells[ii + jj*nx].speeds[2]
-                + tmp_cells[ii + jj*nx].speeds[5]
-                + tmp_cells[ii + jj*nx].speeds[6]
-                - (tmp_cells[ii + jj*nx].speeds[4]
-                    + tmp_cells[ii + jj*nx].speeds[7]
-                    + tmp_cells[ii + jj*nx].speeds[8]))
-                / local_density;
 
     /* velocity squared */
-    float u_sq = u_x * u_x + u_y * u_y;
+    const float u_sq = u_x * u_x + u_y * u_y;
 
     /* directional velocity components */
     float u[NSPEEDS];
