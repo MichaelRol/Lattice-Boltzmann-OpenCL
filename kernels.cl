@@ -126,7 +126,6 @@ kernel void propagate(global t_speed* cells,
   }
   else
   {
-
     /* velocity squared */
     const float u_sq = u_x * u_x + u_y * u_y;
 
@@ -180,10 +179,15 @@ kernel void propagate(global t_speed* cells,
                                               + omega
                                               * (d_equ[kk] - tmp_cells[ii + jj*nx].speeds[kk]);
     }
+  }
 
-    /* accumulate the norm of x- and y- velocity components */
-    local_u[local_idX + (num_wrk_itemsX * local_idY)] = (float)pow(((u_x * u_x) + (u_y * u_y)), 0.5f);
-    local_cells[local_idX + (num_wrk_itemsX * local_idY)] = 1;
+    // /* accumulate the norm of x- and y- velocity components */
+    // local_u[local_idX + (num_wrk_itemsX * local_idY)] = (float)pow(((u_x * u_x) + (u_y * u_y)), 0.5f);
+    // local_cells[local_idX + (num_wrk_itemsX * local_idY)] = 1;
+
+    local_tot_u[local_id_x + (local_size_x * local_id_y)] = obstacles[ii + jj*nx] ? 0.f : (float)pow(((u_x * u_x) + (u_y * u_y)), 0.5f);
+    local_tot_cells[local_id_x + (local_size_x * local_id_y)] = obstacles[ii + jj*nx] ? 0 : 1;
+    
 
     barrier(CLK_LOCAL_MEM_FENCE);
 
@@ -201,7 +205,7 @@ kernel void propagate(global t_speed* cells,
       partial_u[group_idX + ((nx / num_wrk_itemsX) * group_idY)] = uSum;                                       
    }
 
-  }
+  
 }
 
 kernel void rebound(global t_speed* cells,
