@@ -74,15 +74,15 @@ kernel void propagate(global t_speed* cells,
   const int group_idX = get_group_id(0);
   const int group_idY = get_group_id(1);
 
-  const float speed0 = cells.speeds0[ii + jj*params.nx];
-  const float speed1 = cells.speeds1[x_w + jj*params.nx];
-  const float speed2 = cells.speeds2[ii + y_s*params.nx];
-  const float speed3 = cells.speeds3[x_e + jj*params.nx];
-  const float speed4 = cells.speeds4[ii + y_n*params.nx];
-  const float speed5 = cells.speeds5[x_w + y_s*params.nx];
-  const float speed6 = cells.speeds6[x_e + y_s*params.nx];
-  const float speed7 = cells.speeds7[x_e + y_n*params.nx];
-  const float speed8 = cells.speeds8[x_w + y_n*params.nx];
+  const float speed0 = cells.speeds0[ii + jj*nx];
+  const float speed1 = cells.speeds1[x_w + jj*nx];
+  const float speed2 = cells.speeds2[ii + y_s*nx];
+  const float speed3 = cells.speeds3[x_e + jj*nx];
+  const float speed4 = cells.speeds4[ii + y_n*nx];
+  const float speed5 = cells.speeds5[x_w + y_s*nx];
+  const float speed6 = cells.speeds6[x_e + y_s*nx];
+  const float speed7 = cells.speeds7[x_e + y_n*nx];
+  const float speed8 = cells.speeds8[x_w + y_n*nx];
 
   /* propagate densities from neighbouring cells, following
   ** appropriate directions of travel and writing into
@@ -129,15 +129,15 @@ kernel void propagate(global t_speed* cells,
   {
         /* called after propagate, so taking values from scratch space
         ** mirroring, and writing into main grid */
-        tmp_cells[ii + jj*params.nx].speed[0] = speed0;
-        tmp_cells[ii + jj*params.nx].speed[1] = speed3;
-        tmp_cells[ii + jj*params.nx].speed[2] = speed4;
-        tmp_cells[ii + jj*params.nx].speed[3] = speed1;
-        tmp_cells[ii + jj*params.nx].speed[4] = speed2;
-        tmp_cells[ii + jj*params.nx].speed[5] = speed7;
-        tmp_cells[ii + jj*params.nx].speed[6] = speed8;
-        tmp_cells[ii + jj*params.nx].speed[7] = speed5;
-        tmp_cells[ii + jj*params.nx].speed[8] = speed6;
+        tmp_cells[ii + jj*nx].speed[0] = speed0;
+        tmp_cells[ii + jj*nx].speed[1] = speed3;
+        tmp_cells[ii + jj*nx].speed[2] = speed4;
+        tmp_cells[ii + jj*nx].speed[3] = speed1;
+        tmp_cells[ii + jj*nx].speed[4] = speed2;
+        tmp_cells[ii + jj*nx].speed[5] = speed7;
+        tmp_cells[ii + jj*nx].speed[6] = speed8;
+        tmp_cells[ii + jj*nx].speed[7] = speed5;
+        tmp_cells[ii + jj*nx].speed[8] = speed6;
   }
   else
   {
@@ -188,32 +188,32 @@ kernel void propagate(global t_speed* cells,
                                      - u_sq / (2.f * c_sq));
 
       /* relaxation step */
-    tmp_cells[ii + jj*params.nx].speeds[0] = speed0
-                                            + params.omega
+    tmp_cells[ii + jj*nx].speeds[0] = speed0
+                                            + omega
                                             * (d_equ[0] - speed0);
-    tmp_cells[ii + jj*params.nx].speeds[1] = speed1
-                                            + params.omega
+    tmp_cells[ii + jj*nx].speeds[1] = speed1
+                                            + omega
                                             * (d_equ[1] - speed1);
-    tmp_cells[ii + jj*params.nx].speeds[2] = speed2
-                                            + params.omega
+    tmp_cells[ii + jj*nx].speeds[2] = speed2
+                                            + omega
                                             * (d_equ[2] - speed2);
-    tmp_cells[ii + jj*params.nx].speeds[3] = speed3
-                                            + params.omega
+    tmp_cells[ii + jj*nx].speeds[3] = speed3
+                                            + omega
                                             * (d_equ[3] - speed3);
-    tmp_cells[ii + jj*params.nx].speeds[4] = speed4
-                                            + params.omega
+    tmp_cells[ii + jj*nx].speeds[4] = speed4
+                                            + omega
                                             * (d_equ[4] - speed4);
-    tmp_cells[ii + jj*params.nx].speeds[5] = speed5
-                                            + params.omega
+    tmp_cells[ii + jj*nx].speeds[5] = speed5
+                                            + omega
                                             * (d_equ[5] - speed5);
-    tmp_cells[ii + jj*params.nx].speeds[6] = speed6
-                                            + params.omega
+    tmp_cells[ii + jj*nx].speeds[6] = speed6
+                                            + omega
                                             * (d_equ[6] - speed6);
-    tmp_cells[ii + jj*params.nx].speeds[7] = speed7
-                                            + params.omega
+    tmp_cells[ii + jj*nx].speeds[7] = speed7
+                                            + omega
                                             * (d_equ[7] - speed7);
-    tmp_cells[ii + jj*params.nx].speeds[8] = speed8
-                                            + params.omega
+    tmp_cells[ii + jj*nx].speeds[8] = speed8
+                                            + omega
                                             * (d_equ[8] - speed8);
 
       
