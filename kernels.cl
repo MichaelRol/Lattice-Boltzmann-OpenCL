@@ -74,6 +74,16 @@ kernel void propagate(global t_speed* cells,
   const int group_idX = get_group_id(0);
   const int group_idY = get_group_id(1);
 
+  const float speed0 = cells.speeds0[ii + jj*params.nx];
+  const float speed1 = cells.speeds1[x_w + jj*params.nx];
+  const float speed2 = cells.speeds2[ii + y_s*params.nx];
+  const float speed3 = cells.speeds3[x_e + jj*params.nx];
+  const float speed4 = cells.speeds4[ii + y_n*params.nx];
+  const float speed5 = cells.speeds5[x_w + y_s*params.nx];
+  const float speed6 = cells.speeds6[x_e + y_s*params.nx];
+  const float speed7 = cells.speeds7[x_e + y_n*params.nx];
+  const float speed8 = cells.speeds8[x_w + y_n*params.nx];
+
   /* propagate densities from neighbouring cells, following
   ** appropriate directions of travel and writing into
   ** scratch space grid */
@@ -89,11 +99,15 @@ kernel void propagate(global t_speed* cells,
 
   /* compute local density total */
   float local_density = 0.f;
-
-  for (int kk = 0; kk < NSPEEDS; kk++)
-  {
-    local_density += tmp_cells[ii + jj*nx].speeds[kk];
-  }
+  local_density += speed0;
+  local_density += speed1;
+  local_density += speed2;
+  local_density += speed3;
+  local_density += speed4;
+  local_density += speed5;
+  local_density += speed6;
+  local_density += speed7;
+  local_density += speed8;
   /* compute x velocity component */
   const float u_x = (tmp_cells[ii + jj*nx].speeds[1]
                 + tmp_cells[ii + jj*nx].speeds[5]
@@ -113,16 +127,17 @@ kernel void propagate(global t_speed* cells,
 
   if (obstacles[jj*nx + ii])
   {
-    /* called after propagate, so taking values from scratch space
-    ** mirroring, and writing into main grid */
-    cells[ii + jj*nx].speeds[1] = tmp_cells[ii + jj*nx].speeds[3];
-    cells[ii + jj*nx].speeds[2] = tmp_cells[ii + jj*nx].speeds[4];
-    cells[ii + jj*nx].speeds[3] = tmp_cells[ii + jj*nx].speeds[1];
-    cells[ii + jj*nx].speeds[4] = tmp_cells[ii + jj*nx].speeds[2];
-    cells[ii + jj*nx].speeds[5] = tmp_cells[ii + jj*nx].speeds[7];
-    cells[ii + jj*nx].speeds[6] = tmp_cells[ii + jj*nx].speeds[8];
-    cells[ii + jj*nx].speeds[7] = tmp_cells[ii + jj*nx].speeds[5];
-    cells[ii + jj*nx].speeds[8] = tmp_cells[ii + jj*nx].speeds[6];
+        /* called after propagate, so taking values from scratch space
+        ** mirroring, and writing into main grid */
+        tmp_cells.speeds0[ii + jj*params.nx] = speed0;
+        tmp_cells.speeds1[ii + jj*params.nx] = speed3;
+        tmp_cells.speeds2[ii + jj*params.nx] = speed4;
+        tmp_cells.speeds3[ii + jj*params.nx] = speed1;
+        tmp_cells.speeds4[ii + jj*params.nx] = speed2;
+        tmp_cells.speeds5[ii + jj*params.nx] = speed7;
+        tmp_cells.speeds6[ii + jj*params.nx] = speed8;
+        tmp_cells.speeds7[ii + jj*params.nx] = speed5;
+        tmp_cells.speeds8[ii + jj*params.nx] = speed6;
   }
   else
   {
@@ -172,13 +187,36 @@ kernel void propagate(global t_speed* cells,
                                      + (u[8] * u[8]) / (2.f * c_sq * c_sq)
                                      - u_sq / (2.f * c_sq));
 
-    /* relaxation step */
-    for (int kk = 0; kk < NSPEEDS; kk++)
-    {
-      cells[ii + jj*nx].speeds[kk] = tmp_cells[ii + jj*nx].speeds[kk]
-                                              + omega
-                                              * (d_equ[kk] - tmp_cells[ii + jj*nx].speeds[kk]);
-    }
+      /* relaxation step */
+    tmp_cells.speeds0[ii + jj*params.nx] = speed0
+                                            + params.omega
+                                            * (d_equ[0] - speed0);
+    tmp_cells.speeds1[ii + jj*params.nx] = speed1
+                                            + params.omega
+                                            * (d_equ[1] - speed1);
+    tmp_cells.speeds2[ii + jj*params.nx] = speed2
+                                            + params.omega
+                                            * (d_equ[2] - speed2);
+    tmp_cells.speeds3[ii + jj*params.nx] = speed3
+                                            + params.omega
+                                            * (d_equ[3] - speed3);
+    tmp_cells.speeds4[ii + jj*params.nx] = speed4
+                                            + params.omega
+                                            * (d_equ[4] - speed4);
+    tmp_cells.speeds5[ii + jj*params.nx] = speed5
+                                            + params.omega
+                                            * (d_equ[5] - speed5);
+    tmp_cells.speeds6[ii + jj*params.nx] = speed6
+                                            + params.omega
+                                            * (d_equ[6] - speed6);
+    tmp_cells.speeds7[ii + jj*params.nx] = speed7
+                                            + params.omega
+                                            * (d_equ[7] - speed7);
+    tmp_cells.speeds8[ii + jj*params.nx] = speed8
+                                            + params.omega
+                                            * (d_equ[8] - speed8);
+
+      
   }
     local_u[local_idX + (num_wrk_itemsX * local_idY)] = obstacles[ii + jj*nx] ? 0.f : (float)pow(((u_x * u_x) + (u_y * u_y)), 0.5f);
     local_cells[local_idX + (num_wrk_itemsX * local_idY)] = obstacles[ii + jj*nx] ? 0 : 1;
