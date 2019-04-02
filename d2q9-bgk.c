@@ -243,10 +243,10 @@ float timestep(const t_param params, t_speed* cells, t_speed* tmp_cells, int* ob
   cl_int err;
 
   // Write cells to device
-  err = clEnqueueWriteBuffer(
-    ocl.queue, ocl.cells, CL_TRUE, 0,
-    sizeof(t_speed) * params.nx * params.ny, cells, 0, NULL, NULL);
-  checkError(err, "writing cells data", __LINE__);
+  // err = clEnqueueWriteBuffer(
+  //   ocl.queue, ocl.cells, CL_TRUE, 0,
+  //   sizeof(t_speed) * params.nx * params.ny, cells, 0, NULL, NULL);
+  // checkError(err, "writing cells data", __LINE__);
 
   accelerate_flow(params, cells, obstacles, ocl);
   float av = propagate(params, cells, tmp_cells, ocl);
@@ -254,10 +254,10 @@ float timestep(const t_param params, t_speed* cells, t_speed* tmp_cells, int* ob
   // collision(params, cells, tmp_cells, obstacles, ocl);
 
       // Read cells from device
-  err = clEnqueueReadBuffer(
-    ocl.queue, ocl.cells, CL_TRUE, 0,
-    sizeof(t_speed) * params.nx * params.ny, cells, 0, NULL, NULL);
-  checkError(err, "reading cells data", __LINE__);
+  // err = clEnqueueReadBuffer(
+  //   ocl.queue, ocl.cells, CL_TRUE, 0,
+  //   sizeof(t_speed) * params.nx * params.ny, cells, 0, NULL, NULL);
+  // checkError(err, "reading cells data", __LINE__);
   return av;
 }
 
