@@ -9,8 +9,8 @@ typedef struct
 
 kernel void accelerate_flow(global t_speed* cells,
                             global int* obstacles,
-                            const int nx, const int ny,
-                            const float density, const float accel)
+                            int nx, int ny,
+                            float density, float accel)
 {
   /* compute weighting factors */
   float w1 = density * accel / 9.0;
@@ -77,18 +77,6 @@ kernel void propagate(global t_speed* cells,
   /* propagate densities from neighbouring cells, following
   ** appropriate directions of travel and writing into
   ** scratch space grid */
-
-
-  const float speed0 = cells.speeds0[ii + jj*params.nx];
-  const float speed1 = cells.speeds1[x_w + jj*params.nx];
-  const float speed2 = cells.speeds2[ii + y_s*params.nx];
-  const float speed3 = cells.speeds3[x_e + jj*params.nx];
-  const float speed4 = cells.speeds4[ii + y_n*params.nx];
-  const float speed5 = cells.speeds5[x_w + y_s*params.nx];
-  const float speed6 = cells.speeds6[x_e + y_s*params.nx];
-  const float speed7 = cells.speeds7[x_e + y_n*params.nx];
-  const float speed8 = cells.speeds8[x_w + y_n*params.nx];
-
   tmp_cells[ii + jj*nx].speeds[0] = cells[ii + jj*nx].speeds[0]; /* central cell, no movement */
   tmp_cells[ii + jj*nx].speeds[1] = cells[x_w + jj*nx].speeds[1]; /* east */
   tmp_cells[ii + jj*nx].speeds[2] = cells[ii + y_s*nx].speeds[2]; /* north */
@@ -123,18 +111,18 @@ kernel void propagate(global t_speed* cells,
                   + tmp_cells[ii + jj*nx].speeds[8]))
               / local_density;
 
-  if (obstacles[jj*params.nx + ii]) {
+  if (obstacles[jj*nx + ii])
+  {
     /* called after propagate, so taking values from scratch space
     ** mirroring, and writing into main grid */
-    tmp_cells.speeds0[ii + jj*params.nx] = speed0;
-    tmp_cells.speeds1[ii + jj*params.nx] = speed3;
-    tmp_cells.speeds2[ii + jj*params.nx] = speed4;
-    tmp_cells.speeds3[ii + jj*params.nx] = speed1;
-    tmp_cells.speeds4[ii + jj*params.nx] = speed2;
-    tmp_cells.speeds5[ii + jj*params.nx] = speed7;
-    tmp_cells.speeds6[ii + jj*params.nx] = speed8;
-    tmp_cells.speeds7[ii + jj*params.nx] = speed5;
-    tmp_cells.speeds8[ii + jj*params.nx] = speed6;
+    cells[ii + jj*nx].speeds[1] = tmp_cells[ii + jj*nx].speeds[3];
+    cells[ii + jj*nx].speeds[2] = tmp_cells[ii + jj*nx].speeds[4];
+    cells[ii + jj*nx].speeds[3] = tmp_cells[ii + jj*nx].speeds[1];
+    cells[ii + jj*nx].speeds[4] = tmp_cells[ii + jj*nx].speeds[2];
+    cells[ii + jj*nx].speeds[5] = tmp_cells[ii + jj*nx].speeds[7];
+    cells[ii + jj*nx].speeds[6] = tmp_cells[ii + jj*nx].speeds[8];
+    cells[ii + jj*nx].speeds[7] = tmp_cells[ii + jj*nx].speeds[5];
+    cells[ii + jj*nx].speeds[8] = tmp_cells[ii + jj*nx].speeds[6];
   }
   else
   {
@@ -184,55 +172,33 @@ kernel void propagate(global t_speed* cells,
                                      + (u[8] * u[8]) / (2.f * c_sq * c_sq)
                                      - u_sq / (2.f * c_sq));
 
-
     /* relaxation step */
-    tmp_cells->speeds0[ii + jj*params.nx] = speed0
-                                            + params.omega
-                                            * (d_equ[0] - speed0);
-    tmp_cells->speeds1[ii + jj*params.nx] = speed1
-                                            + params.omega
-                                            * (d_equ[1] - speed1);
-    tmp_cells->speeds2[ii + jj*params.nx] = speed2
-                                            + params.omega
-                                            * (d_equ[2] - speed2);
-    tmp_cells->speeds3[ii + jj*params.nx] = speed3
-                                            + params.omega
-                                            * (d_equ[3] - speed3);
-    tmp_cells->speeds4[ii + jj*params.nx] = speed4
-                                            + params.omega
-                                            * (d_equ[4] - speed4);
-    tmp_cells->speeds5[ii + jj*params.nx] = speed5
-                                            + params.omega
-                                            * (d_equ[5] - speed5);
-    tmp_cells->speeds6[ii + jj*params.nx] = speed6
-                                            + params.omega
-                                            * (d_equ[6] - speed6);
-    tmp_cells->speeds7[ii + jj*params.nx] = speed7
-                                            + params.omega
-                                            * (d_equ[7] - speed7);
-    tmp_cells->speeds8[ii + jj*params.nx] = speed8
-                                            + params.omega
-                                            * (d_equ[8] - speed8);
-  }
-  local_u[local_idX + (num_wrk_itemsX * local_idY)] = obstacles[ii + jj*nx] ? 0.f : (float)pow(((u_x * u_x) + (u_y * u_y)), 0.5f);
-  local_cells[local_idX + (num_wrk_itemsX * local_idY)] = obstacles[ii + jj*nx] ? 0 : 1;
-  
-
-  barrier(CLK_LOCAL_MEM_FENCE);
-
-  int cellSum;
-  float uSum;
-
-  if (local_idX == 1 && local_idY == 1) {
-    cellSum = 0;                            
-    uSum = 0.f;
-    for (int i=0; i<num_wrk_itemsX * num_wrk_itemsY; i++) {        
-        cellSum += local_cells[i];
-        uSum += local_u[i];             
+    for (int kk = 0; kk < NSPEEDS; kk++)
+    {
+      cells[ii + jj*nx].speeds[kk] = tmp_cells[ii + jj*nx].speeds[kk]
+                                              + omega
+                                              * (d_equ[kk] - tmp_cells[ii + jj*nx].speeds[kk]);
     }
-    partial_cells[group_idX + ((nx / num_wrk_itemsX) * group_idY)] = cellSum;
-    partial_u[group_idX + ((nx / num_wrk_itemsX) * group_idY)] = uSum;                                       
   }
+    local_u[local_idX + (num_wrk_itemsX * local_idY)] = obstacles[ii + jj*nx] ? 0.f : (float)pow(((u_x * u_x) + (u_y * u_y)), 0.5f);
+    local_cells[local_idX + (num_wrk_itemsX * local_idY)] = obstacles[ii + jj*nx] ? 0 : 1;
+    
+
+    barrier(CLK_LOCAL_MEM_FENCE);
+
+    int cellSum;
+    float uSum;
+
+    if (local_idX == 1 && local_idY == 1) {
+      cellSum = 0;                            
+      uSum = 0.f;
+      for (int i=0; i<num_wrk_itemsX * num_wrk_itemsY; i++) {        
+          cellSum += local_cells[i];
+          uSum += local_u[i];             
+      }
+      partial_cells[group_idX + ((nx / num_wrk_itemsX) * group_idY)] = cellSum;
+      partial_u[group_idX + ((nx / num_wrk_itemsX) * group_idY)] = uSum;                                       
+   }
 
   
 }
