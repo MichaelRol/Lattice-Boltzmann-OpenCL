@@ -79,15 +79,15 @@ kernel void propagate(global t_speed* cells,
   ** scratch space grid */
 
 
-  const float speed0 = cells->speeds0[ii + jj*params.nx];
-  const float speed1 = cells->speeds1[x_w + jj*params.nx];
-  const float speed2 = cells->speeds2[ii + y_s*params.nx];
-  const float speed3 = cells->speeds3[x_e + jj*params.nx];
-  const float speed4 = cells->speeds4[ii + y_n*params.nx];
-  const float speed5 = cells->speeds5[x_w + y_s*params.nx];
-  const float speed6 = cells->speeds6[x_e + y_s*params.nx];
-  const float speed7 = cells->speeds7[x_e + y_n*params.nx];
-  const float speed8 = cells->speeds8[x_w + y_n*params.nx];
+  const float speed0 = cells.speeds0[ii + jj*params.nx];
+  const float speed1 = cells.speeds1[x_w + jj*params.nx];
+  const float speed2 = cells.speeds2[ii + y_s*params.nx];
+  const float speed3 = cells.speeds3[x_e + jj*params.nx];
+  const float speed4 = cells.speeds4[ii + y_n*params.nx];
+  const float speed5 = cells.speeds5[x_w + y_s*params.nx];
+  const float speed6 = cells.speeds6[x_e + y_s*params.nx];
+  const float speed7 = cells.speeds7[x_e + y_n*params.nx];
+  const float speed8 = cells.speeds8[x_w + y_n*params.nx];
 
   tmp_cells[ii + jj*nx].speeds[0] = cells[ii + jj*nx].speeds[0]; /* central cell, no movement */
   tmp_cells[ii + jj*nx].speeds[1] = cells[x_w + jj*nx].speeds[1]; /* east */
@@ -126,15 +126,15 @@ kernel void propagate(global t_speed* cells,
   if (obstacles[jj*params.nx + ii]) {
     /* called after propagate, so taking values from scratch space
     ** mirroring, and writing into main grid */
-    tmp_cells->speeds0[ii + jj*params.nx] = speed0;
-    tmp_cells->speeds1[ii + jj*params.nx] = speed3;
-    tmp_cells->speeds2[ii + jj*params.nx] = speed4;
-    tmp_cells->speeds3[ii + jj*params.nx] = speed1;
-    tmp_cells->speeds4[ii + jj*params.nx] = speed2;
-    tmp_cells->speeds5[ii + jj*params.nx] = speed7;
-    tmp_cells->speeds6[ii + jj*params.nx] = speed8;
-    tmp_cells->speeds7[ii + jj*params.nx] = speed5;
-    tmp_cells->speeds8[ii + jj*params.nx] = speed6;
+    tmp_cells.speeds0[ii + jj*params.nx] = speed0;
+    tmp_cells.speeds1[ii + jj*params.nx] = speed3;
+    tmp_cells.speeds2[ii + jj*params.nx] = speed4;
+    tmp_cells.speeds3[ii + jj*params.nx] = speed1;
+    tmp_cells.speeds4[ii + jj*params.nx] = speed2;
+    tmp_cells.speeds5[ii + jj*params.nx] = speed7;
+    tmp_cells.speeds6[ii + jj*params.nx] = speed8;
+    tmp_cells.speeds7[ii + jj*params.nx] = speed5;
+    tmp_cells.speeds8[ii + jj*params.nx] = speed6;
   }
   else
   {
