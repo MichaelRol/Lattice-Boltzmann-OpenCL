@@ -285,7 +285,7 @@ int accelerate_flow_first(const t_param params, t_speed* cells, int* obstacles, 
   return EXIT_SUCCESS;
 }
 
-int accelerate_flow_secomd(const t_param params, t_speed* cells, int* obstacles, t_ocl ocl)
+int accelerate_flow_second(const t_param params, t_speed* cells, int* obstacles, t_ocl ocl)
 {
   cl_int err;
 
