@@ -24,20 +24,21 @@ kernel void accelerate_flow(global float* cells,
 
   /* if the cell is not occupied and
   ** we don't send a negative density */
-  if (!obstacles[ii + jj* nx]
+  bool condition = !obstacles[ii + jj* nx]
       && (cells[3*(nx * ny) + ii + jj*nx] - w1) > 0.f
       && (cells[6*(nx * ny) + ii + jj*nx] - w2) > 0.f
-      && (cells[7*(nx * ny) + ii + jj*nx] - w2) > 0.f)
-  {
+      && (cells[7*(nx * ny) + ii + jj*nx] - w2) > 0.f;
+
+
     /* increase 'east-side' densities */
-    cells[1*(nx * ny) + ii + jj*nx] += w1;
-    cells[5*(nx * ny) + ii + jj*nx] += w2;
-    cells[8*(nx * ny) + ii + jj*nx] += w2;
+    cells[1*(nx * ny) + ii + jj*nx] += condition ? w1 : 0.f;
+    cells[5*(nx * ny) + ii + jj*nx] += condition ? w2 : 0.f;
+    cells[8*(nx * ny) + ii + jj*nx] += condition ? w2 : 0.f;
     /* decrease 'west-side' densities */
-    cells[3*(nx * ny) + ii + jj*nx] -= w1;
-    cells[6*(nx * ny) + ii + jj*nx] -= w2;
-    cells[7*(nx * ny) + ii + jj*nx] -= w2;
-  }
+    cells[3*(nx * ny) + ii + jj*nx] -= condition ? w1 : 0.f;
+    cells[6*(nx * ny) + ii + jj*nx] -= condition ? w2 : 0.f;
+    cells[7*(nx * ny) + ii + jj*nx] -= condition ? w2 : 0.f ;
+  
 }
 
 kernel void propagate(global float* cells,
