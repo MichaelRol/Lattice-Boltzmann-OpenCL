@@ -109,20 +109,20 @@ kernel void propagate(global t_speed* cells,
   local_density += speed7;
   local_density += speed8;
   /* compute x velocity component */
-  const float u_x = (tmp_cells[ii + jj*nx].speeds[1]
-                + tmp_cells[ii + jj*nx].speeds[5]
-                + tmp_cells[ii + jj*nx].speeds[8]
-                - (tmp_cells[ii + jj*nx].speeds[3]
-                    + tmp_cells[ii + jj*nx].speeds[6]
-                    + tmp_cells[ii + jj*nx].speeds[7]))
+  const float u_x = speed1
+                + speed5
+                + speed8
+                - (speed3
+                    + speed6
+                    + speed7))
                 / local_density;
   /* compute y velocity component */
-  const float u_y = (tmp_cells[ii + jj*nx].speeds[2]
-              + tmp_cells[ii + jj*nx].speeds[5]
-              + tmp_cells[ii + jj*nx].speeds[6]
-              - (tmp_cells[ii + jj*nx].speeds[4]
-                  + tmp_cells[ii + jj*nx].speeds[7]
-                  + tmp_cells[ii + jj*nx].speeds[8]))
+  const float u_y = (speed2
+              + speed5
+              + speed6
+              - (speed4
+                  + speed7
+                  + speed8))
               / local_density;
 
   if (obstacles[jj*nx + ii])
