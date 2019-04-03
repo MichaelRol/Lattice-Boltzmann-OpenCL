@@ -219,7 +219,7 @@ kernel void propagate(global float* cells,
   }
 
   if (local_idX == 0 && local_idY == 0){
-    partial_u[group_idX + ((nx / num_wrk_itemsX) * group_idY) + tt] = local_u[0]; 
+    partial_u[group_idX + ((nx / num_wrk_itemsX) * group_idY)] = local_u[0]; 
   }
  
 }
