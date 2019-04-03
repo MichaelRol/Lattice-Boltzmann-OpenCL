@@ -277,7 +277,7 @@ kernel void av_velocity(global float* cells,
     for (int kk = 0; kk < NSPEEDS; kk++)
     {
 
-      local_density += cells[ii + jj*nx].speeds[kk];
+      local_density += cells[kk*(nx*ny) + ii + jj*nx];
     }
 
     /* x-component of velocity */
