@@ -208,7 +208,7 @@ kernel void propagate(global float* cells,
 
   local_u[local_idX + (num_wrk_itemsX * local_idY)] = obstacles[ii + jj*nx] ? 0.f : (float)pow(((u_x * u_x) + (u_y * u_y)), 0.5f);
     
-  for (uint stride = (num_wrk_itemsX * num_wrk_itemsY)/2; stride>0; stride /=2)
+  for (int stride = (num_wrk_itemsX * num_wrk_itemsY)/2; stride>0; stride /=2)
   {
       barrier(CLK_LOCAL_MEM_FENCE);
 
@@ -217,7 +217,7 @@ kernel void propagate(global float* cells,
       }
   }
 
-  if (local_idX + (num_wrk_itemsX * local_idY) == 0){
+  if (local_idX == 0 && local_idY == 0){
     partial_u[group_idX + ((nx / num_wrk_itemsX) * group_idY)] = local_u[0]; 
   }
  

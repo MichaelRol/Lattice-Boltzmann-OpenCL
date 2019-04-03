@@ -96,6 +96,7 @@ typedef struct
   cl_program program;
   cl_kernel  accelerate_flow;
   cl_kernel  propagate;
+  cl_kernel  av_velocity;
 
   cl_mem partial_cells;
   cl_mem partial_u;
@@ -141,10 +142,10 @@ int finalise(const t_param* params, float** cells_ptr, float** tmp_cells_ptr,
 float total_density(const t_param params, float* cells);
 
 /* compute average velocity */
-float av_velocity(const t_param params, float* cells, int* obstacles);
+float av_velocity(const t_param params, t_ocl ocl, int tot_cells);
 
 /* calculate Reynolds number */
-float calc_reynolds(const t_param params, float* cells, int* obstacles);
+float calc_reynolds(const t_param params, t_ocl ocl, int tot_cells);
 
 /* utility functions */
 void checkError(cl_int err, const char *op, const int line);
@@ -244,8 +245,7 @@ int main(int argc, char* argv[])
 
   /* write final values and free memory */
   printf("==done==\n");
-  printf("Reynolds number:\t\t%.12E\n", calc_reynolds(params, cells, obstacles));
-
+  printf("Reynolds number:\t\t%.12E\n", calc_reynolds(params, ocl, tot_cells));
   printf("Elapsed time:\t\t\t%.6lf (s)\n", toc - tic);
   printf("Elapsed user CPU time:\t\t%.6lf (s)\n", usrtim);
   printf("Elapsed system CPU time:\t%.6lf (s)\n", systim);
@@ -447,60 +447,53 @@ float propagate_second(const t_param params, t_ocl ocl)
   return tot_u;
 }
 
-float av_velocity(const t_param params, float* cells, int* obstacles)
+float av_velocity(const t_param params, t_ocl ocl, int tot_cells)
 {
-  int    tot_cells = 0;  /* no. of cells used in calculation */
-  float tot_u;          /* accumulated magnitudes of velocity for each cell */
+  float tot_u = 0.f;    /* accumulated magnitudes of velocity for each cell */
+  float* sum_u = (float*)malloc(sizeof(float)  * params.num_wkg);
 
-  /* initialise */
-  tot_u = 0.f;
 
-  /* loop over all non-blocked cells */
-  for (int jj = 0; jj < params.ny; jj++)
+  cl_int err;
+
+  // Set kernel arguments
+  err = clSetKernelArg(ocl.av_velocity, 0, sizeof(cl_mem), &ocl.cells);
+  checkError(err, "setting av_velocity arg 0", __LINE__);
+  err = clSetKernelArg(ocl.av_velocity, 1, sizeof(cl_mem), &ocl.obstacles);
+  checkError(err, "setting av_velocity arg 1", __LINE__);
+  err = clSetKernelArg(ocl.av_velocity, 2, sizeof(int), &params.nx);
+  checkError(err, "setting av_velocity arg 2", __LINE__);
+  err = clSetKernelArg(ocl.av_velocity, 3, sizeof(int), &params.ny);
+  checkError(err, "setting av_velocity arg 3", __LINE__);
+  err = clSetKernelArg(ocl.av_velocity, 4, sizeof(int) * params.size_wkg, NULL);
+  checkError(err, "setting av_velocity arg 4", __LINE__);
+  err = clSetKernelArg(ocl.av_velocity, 5, sizeof(cl_mem), &ocl.partial_u);
+  checkError(err, "setting av_velocity arg 5", __LINE__);
+
+  // Enqueue kernel
+  size_t global[2] = {params.nx, params.ny};
+  size_t local[2] = {LOCAL_SIZE_X, LOCAL_SIZE_Y};
+  err = clEnqueueNDRangeKernel(ocl.queue, ocl.av_velocity,
+                               2, NULL, global, local, 0, NULL, NULL);
+  checkError(err, "enqueueing av_velocity kernel", __LINE__);
+
+  // Wait for kernel to finish
+  err = clFinish(ocl.queue);
+  checkError(err, "waiting for av_velocity kernel", __LINE__);
+
+  err = clEnqueueReadBuffer(
+    ocl.queue, ocl.partial_u, CL_TRUE, 0,
+    sizeof(float) * params.num_wkg, sum_u, 0, NULL, NULL);
+  checkError(err, "Reading partial_u", __LINE__);
+    
+  for (int x = 0; x < params.num_wkg; x++)
   {
-    for (int ii = 0; ii < params.nx; ii++)
-    {
-      /* ignore occupied cells */
-      if (!obstacles[ii + jj*params.nx])
-      {
-        /* local density total */
-        float local_density = 0.f;
-
-        local_density += cells[ii + jj*params.nx];
-        local_density += cells[(params.nx*params.ny)+ii + jj*params.nx];
-        local_density += cells[2*(params.nx*params.ny)+ii + jj*params.nx];
-        local_density += cells[3*(params.nx*params.ny)+ii + jj*params.nx];
-        local_density += cells[4*(params.nx*params.ny)+ii + jj*params.nx];
-        local_density += cells[5*(params.nx*params.ny)+ii + jj*params.nx];
-        local_density += cells[6*(params.nx*params.ny)+ii + jj*params.nx];
-        local_density += cells[7*(params.nx*params.ny)+ii + jj*params.nx];
-        local_density += cells[8*(params.nx*params.ny)+ii + jj*params.nx];
-
-        /* compute x velocity component */
-        float u_x = (cells[(params.nx*params.ny)+ii + jj*params.nx]
-               + cells[5*(params.nx*params.ny)+ii + jj*params.nx]
-               + cells[8*(params.nx*params.ny)+ii + jj*params.nx]
-               - (cells[3*(params.nx*params.ny)+ii + jj*params.nx]
-                  + cells[6*(params.nx*params.ny)+ii + jj*params.nx]
-                  + cells[7*(params.nx*params.ny)+ii + jj*params.nx]))
-              / local_density;
-        /* compute y velocity component */
-        float u_y = (cells[2*(params.nx*params.ny)+ii + jj*params.nx]
-               + cells[5*(params.nx*params.ny)+ii + jj*params.nx]
-               + cells[6*(params.nx*params.ny)+ii + jj*params.nx]
-               - (cells[4*(params.nx*params.ny)+ii + jj*params.nx]
-                  + cells[7*(params.nx*params.ny)+ii + jj*params.nx]
-                  + cells[8*(params.nx*params.ny)+ii + jj*params.nx]))
-              / local_density;
-        /* accumulate the norm of x- and y- velocity components */
-        tot_u += sqrtf((u_x * u_x) + (u_y * u_y));
-        /* increase counter of inspected cells */
-        ++tot_cells;
-      }
-    }
+      tot_u += sum_u[x];
   }
 
-  return tot_u / (float)tot_cells;
+  free(sum_u);
+  
+  return tot_u/(float)tot_cells;
+
 }
 
 int initialise(const char* paramfile, const char* obstaclefile,
@@ -714,6 +707,8 @@ int initialise(const char* paramfile, const char* obstaclefile,
   checkError(err, "creating accelerate_flow kernel", __LINE__);
   ocl->propagate = clCreateKernel(ocl->program, "propagate", &err);
   checkError(err, "creating propagate kernel", __LINE__);
+  ocl->av_velocity = clCreateKernel(ocl->program, "av_velocity", &err);
+  checkError(err, "creating av_velocity kernel", __LINE__);
 
   params->size_wkg = LOCAL_SIZE_X * LOCAL_SIZE_Y;
   params->num_wkg = (params->nx * params->ny) / (LOCAL_SIZE_X * LOCAL_SIZE_Y);
@@ -768,6 +763,7 @@ int finalise(const t_param* params, float** cells_ptr, float** tmp_cells_ptr,
   clReleaseMemObject(ocl.obstacles);
   clReleaseKernel(ocl.accelerate_flow);
   clReleaseKernel(ocl.propagate);
+  clReleaseKernel(ocl.av_velocity);
   clReleaseProgram(ocl.program);
   clReleaseCommandQueue(ocl.queue);
   clReleaseContext(ocl.context);
@@ -778,11 +774,11 @@ int finalise(const t_param* params, float** cells_ptr, float** tmp_cells_ptr,
 }
 
 
-float calc_reynolds(const t_param params, float* cells, int* obstacles)
+float calc_reynolds(const t_param params, t_ocl ocl, int tot_cells)
 {
   const float viscosity = 1.f / 6.f * (2.f / params.omega - 1.f);
 
-  return av_velocity(params, cells, obstacles) * params.reynolds_dim / viscosity;
+  return av_velocity(params, ocl, tot_cells) * params.reynolds_dim / viscosity;
 }
 
 float total_density(const t_param params, float* cells)
