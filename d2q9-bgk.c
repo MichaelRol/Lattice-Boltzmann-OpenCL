@@ -126,12 +126,12 @@ int initialise(const char* paramfile, const char* obstaclefile,
 ** timestep calls, in order, the functions:
 ** accelerate_flow(), propagate(), rebound() & collision()
 */
-float timestep_first(const t_param params, t_ocl ocl, int tt);
-float timestep_second(const t_param params, t_ocl ocl, int tt);
+float timestep_first(const t_param params, t_ocl ocl);
+float timestep_second(const t_param params, t_ocl ocl);
 int accelerate_flow_first(const t_param params, t_ocl ocl);
-float propagate_first(const t_param params, t_ocl ocl, int tt);
+float propagate_first(const t_param params, t_ocl ocl);
 int accelerate_flow_second(const t_param params, t_ocl ocl);
-float propagate_second(const t_param params, t_ocl ocl, int tt);
+float propagate_second(const t_param params, t_ocl ocl);
 int write_values(const t_param params, float* cells, int* obstacles, float* av_vels);
 
 /* finalise, including freeing up allocated memory */
