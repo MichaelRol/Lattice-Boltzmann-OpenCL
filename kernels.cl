@@ -211,20 +211,22 @@ kernel void propagate(global t_speed* cells,
     
     // Loop for computing localSums : divide WorkGroup into 2 parts
   for (uint stride = (num_wrk_itemsX * num_wrk_itemsY)/2; stride>0; stride /=2)
-     {
+  {
       // Waiting for each 2x2 addition into given workgroup
       barrier(CLK_LOCAL_MEM_FENCE);
 
       // Add elements 2 by 2 between local_id and local_id + stride
-      if (local_idX + (num_wrk_itemsX * local_idY) < stride)
+      if (local_idX + (num_wrk_itemsX * local_idY) < stride){
         local_cells[local_idX + (num_wrk_itemsX * local_idY)] +=  local_cells[local_idX + stride + (num_wrk_itemsX * (local_idY + stride))];
         local_u[local_idX + (num_wrk_itemsX * local_idY)] +=  local_u[local_idX + stride + (num_wrk_itemsX * (local_idY + stride))];
-     }
+      }
+  }
 
   // Write result into partialSums[nWorkGroups]
-  if (local_idX + (num_wrk_itemsX * local_idY) == 0)
+  if (local_idX + (num_wrk_itemsX * local_idY) == 0){
     partial_cells[group_idX + ((nx / num_wrk_itemsX) * group_idY)] = local_cells[0];
-    partial_u[group_idX + ((nx / num_wrk_itemsX) * group_idY)] = local_u[0];  
+    partial_u[group_idX + ((nx / num_wrk_itemsX) * group_idY)] = local_u[0]; 
+  }
     
 
   // barrier(CLK_LOCAL_MEM_FENCE);
