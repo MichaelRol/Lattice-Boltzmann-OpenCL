@@ -74,15 +74,15 @@ kernel void propagate(global t_speed* cells,
   const int group_idX = get_group_id(0);
   const int group_idY = get_group_id(1);
 
-  const float speed0 = cells.speeds0[ii + jj*nx];
-  const float speed1 = cells.speeds1[x_w + jj*nx];
-  const float speed2 = cells.speeds2[ii + y_s*nx];
-  const float speed3 = cells.speeds3[x_e + jj*nx];
-  const float speed4 = cells.speeds4[ii + y_n*nx];
-  const float speed5 = cells.speeds5[x_w + y_s*nx];
-  const float speed6 = cells.speeds6[x_e + y_s*nx];
-  const float speed7 = cells.speeds7[x_e + y_n*nx];
-  const float speed8 = cells.speeds8[x_w + y_n*nx];
+  const float speed0 = cells[ii + jj*nx].speeds[0];
+  const float speed1 = cells[x_w + jj*nx].speeds[1];
+  const float speed2 = cells[ii + y_s*nx].speeds[2];
+  const float speed3 = cells[x_e + jj*nx].speeds[3];
+  const float speed4 = cells[ii + y_n*nx].speeds[4];
+  const float speed5 = cells[x_w + y_s*nx].speeds[5];
+  const float speed6 = cells[x_e + y_s*nx].speeds[6];
+  const float speed7 = cells[x_e + y_n*nx].speeds[7];
+  const float speed8 = cells[x_w + y_n*nx].speeds[8];
 
   /* propagate densities from neighbouring cells, following
   ** appropriate directions of travel and writing into
