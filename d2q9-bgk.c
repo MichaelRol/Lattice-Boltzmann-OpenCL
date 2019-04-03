@@ -360,7 +360,7 @@ float propagate_first(const t_param params, t_ocl ocl, int tt)
   checkError(err, "setting propagate arg 8", __LINE__);
   err = clSetKernelArg(ocl.propagate, 9, sizeof(cl_float), &params.accel);
   checkError(err, "setting propagate arg 9", __LINE__);
-  err = clSetKernelArg(ocl.propagate, 10, sizeof(cl_int), tt);
+  err = clSetKernelArg(ocl.propagate, 10, sizeof(cl_int), &tt);
   checkError(err, "setting propagate arg 10", __LINE__);
 
   // Enqueue kernel
@@ -421,7 +421,7 @@ float propagate_second(const t_param params, t_ocl ocl, int tt)
   checkError(err, "setting propagate arg 8", __LINE__);
   err = clSetKernelArg(ocl.propagate, 9, sizeof(cl_float), &params.accel);
   checkError(err, "setting propagate arg 9", __LINE__);
-  err = clSetKernelArg(ocl.propagate, 10, sizeof(cl_int), tt);
+  err = clSetKernelArg(ocl.propagate, 10, sizeof(cl_int), &tt);
   checkError(err, "setting propagate arg 10", __LINE__);
 
   // Enqueue kernel
