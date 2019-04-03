@@ -144,7 +144,7 @@ float total_density(const t_param params, float* cells);
 float av_velocity(const t_param params, float* cells, int* obstacles);
 
 /* calculate Reynolds number */
-float calc_reynolds(const t_param params, t_ocl ocl, int tot_cells);
+float calc_reynolds(const t_param params, t_speeds* cells, int* obstacles);
 
 /* utility functions */
 void checkError(cl_int err, const char *op, const int line);
@@ -244,7 +244,8 @@ int main(int argc, char* argv[])
 
   /* write final values and free memory */
   printf("==done==\n");
-  printf("Reynolds number:\t\t%.12E\n", calc_reynolds(params, ocl, tot_cells));
+  printf("Reynolds number:\t\t%.12E\n", calc_reynolds(params, cells, obstacles));
+
   printf("Elapsed time:\t\t\t%.6lf (s)\n", toc - tic);
   printf("Elapsed user CPU time:\t\t%.6lf (s)\n", usrtim);
   printf("Elapsed system CPU time:\t%.6lf (s)\n", systim);
@@ -466,30 +467,30 @@ float av_velocity(const t_param params, float* cells, int* obstacles)
         float local_density = 0.f;
 
         local_density += cells[ii + jj*params.nx];
-        local_density += cells[(nx*ny)+ii + jj*params.nx];
-        local_density += cells[2*(nx*ny)+ii + jj*params.nx];
-        local_density += cells[3*(nx*ny)+ii + jj*params.nx];
-        local_density += cells[4*(nx*ny)+ii + jj*params.nx];
-        local_density += cells[5*(nx*ny)+ii + jj*params.nx];
-        local_density += cells[6*(nx*ny)+ii + jj*params.nx];
-        local_density += cells[7*(nx*ny)+ii + jj*params.nx];
-        local_density += cells[8*(nx*ny)+ii + jj*params.nx];
+        local_density += cells[(params.nx*params.ny)+ii + jj*params.nx];
+        local_density += cells[2*(params.nx*params.ny)+ii + jj*params.nx];
+        local_density += cells[3*(params.nx*params.ny)+ii + jj*params.nx];
+        local_density += cells[4*(params.nx*params.ny)+ii + jj*params.nx];
+        local_density += cells[5*(params.nx*params.ny)+ii + jj*params.nx];
+        local_density += cells[6*(params.nx*params.ny)+ii + jj*params.nx];
+        local_density += cells[7*(params.nx*params.ny)+ii + jj*params.nx];
+        local_density += cells[8*(params.nx*params.ny)+ii + jj*params.nx];
 
         /* compute x velocity component */
-        float u_x = (cells[(nx*ny)+ii + jj*params.nx];
-               + cells[5*(nx*ny)+ii + jj*params.nx];
-               + cells[8*(nx*ny)+ii + jj*params.nx];
-               - (cells[3*(nx*ny)+ii + jj*params.nx];
-                  + cells[6*(nx*ny)+ii + jj*params.nx];
-                  + cells[7*(nx*ny)+ii + jj*params.nx];))
+        float u_x = (cells[(params.nx*params.ny)+ii + jj*params.nx]
+               + cells[5*(params.nx*params.ny)+ii + jj*params.nx]
+               + cells[8*(params.nx*params.ny)+ii + jj*params.nx]
+               - (cells[3*(params.nx*params.ny)+ii + jj*params.nx]
+                  + cells[6*(params.nx*params.ny)+ii + jj*params.nx]
+                  + cells[7*(params.nx*params.ny)+ii + jj*params.nx]))
               / local_density;
         /* compute y velocity component */
-        float u_y = (cells[2*(nx*ny)+ii + jj*params.nx];
-               + cells[5*(nx*ny)+ii + jj*params.nx];
-               + cells[6*(nx*ny)+ii + jj*params.nx];
-               - (cells[4*(nx*ny)+ii + jj*params.nx];
-                  + cells[7*(nx*ny)+ii + jj*params.nx];
-                  + cells[8*(nx*ny)+ii + jj*params.nx];))
+        float u_y = (cells[2*(params.nx*params.ny)+ii + jj*params.nx]
+               + cells[5*(params.nx*params.ny)+ii + jj*params.nx]
+               + cells[6*(params.nx*params.ny)+ii + jj*params.nx]
+               - (cells[4*(params.nx*params.ny)+ii + jj*params.nx]
+                  + cells[7*(params.nx*params.ny)+ii + jj*params.nx]
+                  + cells[8*(params.nx*params.ny)+ii + jj*params.nx]))
               / local_density;
         /* accumulate the norm of x- and y- velocity components */
         tot_u += sqrtf((u_x * u_x) + (u_y * u_y));
@@ -777,7 +778,7 @@ int finalise(const t_param* params, float** cells_ptr, float** tmp_cells_ptr,
 }
 
 
-float calc_reynolds(const t_param params, t_ocl ocl, int tot_cells)
+float calc_reynolds(const t_param params, t_speeds* cells, int* obstacles)
 {
   const float viscosity = 1.f / 6.f * (2.f / params.omega - 1.f);
 
