@@ -852,7 +852,7 @@ int write_values(const t_param params, float* cells, int* obstacles, float* av_v
 
         for (int kk = 0; kk < NSPEEDS; kk++)
         {
-          local_density += cells[kk(params.nx * params.ny)ii + jj*params.nx];
+          local_density += cells[kk*(params.nx * params.ny) + ii + jj*params.nx];
         }
 
         /* compute x velocity component */
