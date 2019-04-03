@@ -109,7 +109,7 @@ kernel void propagate(global t_speed* cells,
   local_density += speed7;
   local_density += speed8;
   /* compute x velocity component */
-  const float u_x = speed1
+  const float u_x = (speed1
                 + speed5
                 + speed8
                 - (speed3
