@@ -221,8 +221,8 @@ int main(int argc, char* argv[])
 
   for (int tt = 0; tt < params.maxIters; tt += 2)
   {
-    av_vels[tt] = timestep_first(params, ocl)/float(tot_cells);
-    av_vels[tt+1] = timestep_second(params, ocl)float(tot_cells);
+    av_vels[tt] = timestep_first(params, ocl)/(float)tot_cells;
+    av_vels[tt+1] = timestep_second(params, ocl)(float)tot_cells;
 #ifdef DEBUG
     printf("==timestep: %d==\n", tt);
     printf("av velocity: %.12E\n", av_vels[tt]);
