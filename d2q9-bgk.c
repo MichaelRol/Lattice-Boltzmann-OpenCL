@@ -127,9 +127,12 @@ int initialise(const char* paramfile, const char* obstaclefile,
 ** timestep calls, in order, the functions:
 ** accelerate_flow(), propagate(), rebound() & collision()
 */
-float timestep(const t_param params, t_speed* cells, t_speed* tmp_cells, int* obstacles, t_ocl ocl);
-int accelerate_flow(const t_param params, t_speed* cells, int* obstacles, t_ocl ocl);
-float propagate(const t_param params, t_speed* cells, t_speed* tmp_cells, t_ocl ocl);
+float timestep_first(const t_param params, t_speed* cells, t_speed* tmp_cells, int* obstacles, t_ocl ocl);
+float timestep_second(const t_param params, t_speed* cells, t_speed* tmp_cells, int* obstacles, t_ocl ocl);
+int accelerate_flow_first(const t_param params, t_speed* cells, int* obstacles, t_ocl ocl);
+float propagate_first(const t_param params, t_speed* cells, t_speed* tmp_cells, t_ocl ocl);
+int accelerate_flow_second(const t_param params, t_speed* cells, int* obstacles, t_ocl ocl);
+float propagate_second(const t_param params, t_speed* cells, t_speed* tmp_cells, t_ocl ocl);
 int write_values(const t_param params, t_speed* cells, int* obstacles, float* av_vels);
 
 /* finalise, including freeing up allocated memory */
@@ -206,8 +209,8 @@ int main(int argc, char* argv[])
 
   for (int tt = 0; tt < params.maxIters; tt += 2)
   {
-    av_vels[tt] = timestep(params, cells, tmp_cells, obstacles, ocl);
-    av_vels[tt+1] = timestep(params, tmp_cells, cells, obstacles, ocl);
+    av_vels[tt] = timestep_first(params, cells, tmp_cells, obstacles, ocl);
+    av_vels[tt+1] = timestep_second(params, tmp_cells, cells, obstacles, ocl);
 #ifdef DEBUG
     printf("==timestep: %d==\n", tt);
     printf("av velocity: %.12E\n", av_vels[tt]);
@@ -235,15 +238,23 @@ int main(int argc, char* argv[])
   return EXIT_SUCCESS;
 }
 
-float timestep(const t_param params, t_speed* cells, t_speed* tmp_cells, int* obstacles, t_ocl ocl)
+float timestep_first(const t_param params, t_speed* cells, t_speed* tmp_cells, int* obstacles, t_ocl ocl)
 {
   cl_int err;
-  accelerate_flow(params, cells, obstacles, ocl);
-  float av = propagate(params, cells, tmp_cells, ocl);
+  accelerate_flow_first(params, cells, obstacles, ocl);
+  float av = propagate_first(params, cells, tmp_cells, ocl);
   return av;
 }
 
-int accelerate_flow(const t_param params, t_speed* cells, int* obstacles, t_ocl ocl)
+float timestep_second(const t_param params, t_speed* cells, t_speed* tmp_cells, int* obstacles, t_ocl ocl)
+{
+  cl_int err;
+  accelerate_flow_second(params, cells, obstacles, ocl);
+  float av = propagate_second(params, cells, tmp_cells, ocl);
+  return av;
+}
+
+int accelerate_flow_first(const t_param params, t_speed* cells, int* obstacles, t_ocl ocl)
 {
   cl_int err;
 
@@ -274,7 +285,38 @@ int accelerate_flow(const t_param params, t_speed* cells, int* obstacles, t_ocl 
   return EXIT_SUCCESS;
 }
 
-float propagate(const t_param params, t_speed* cells, t_speed* tmp_cells, t_ocl ocl)
+int accelerate_flow_secomd(const t_param params, t_speed* cells, int* obstacles, t_ocl ocl)
+{
+  cl_int err;
+
+  // Set kernel arguments
+  err = clSetKernelArg(ocl.accelerate_flow, 0, sizeof(cl_mem), &ocl.tmp_cells);
+  checkError(err, "setting accelerate_flow arg 0", __LINE__);
+  err = clSetKernelArg(ocl.accelerate_flow, 1, sizeof(cl_mem), &ocl.obstacles);
+  checkError(err, "setting accelerate_flow arg 1", __LINE__);
+  err = clSetKernelArg(ocl.accelerate_flow, 2, sizeof(cl_int), &params.nx);
+  checkError(err, "setting accelerate_flow arg 2", __LINE__);
+  err = clSetKernelArg(ocl.accelerate_flow, 3, sizeof(cl_int), &params.ny);
+  checkError(err, "setting accelerate_flow arg 3", __LINE__);
+  err = clSetKernelArg(ocl.accelerate_flow, 4, sizeof(cl_float), &params.density);
+  checkError(err, "setting accelerate_flow arg 4", __LINE__);
+  err = clSetKernelArg(ocl.accelerate_flow, 5, sizeof(cl_float), &params.accel);
+  checkError(err, "setting accelerate_flow arg 5", __LINE__);
+
+  // Enqueue kernel
+  size_t global[1] = {params.nx};
+  err = clEnqueueNDRangeKernel(ocl.queue, ocl.accelerate_flow,
+                               1, NULL, global, NULL, 0, NULL, NULL);
+  checkError(err, "enqueueing accelerate_flow kernel", __LINE__);
+
+  // Wait for kernel to finish
+  err = clFinish(ocl.queue);
+  checkError(err, "waiting for accelerate_flow kernel", __LINE__);
+
+  return EXIT_SUCCESS;
+}
+
+float propagate_first(const t_param params, t_speed* cells, t_speed* tmp_cells, t_ocl ocl)
 {
   int tot_cells = 0;    /* no. of cells used in calculation */
   float tot_u = 0.f;    /* accumulated magnitudes of velocity for each cell */
@@ -337,6 +379,70 @@ float propagate(const t_param params, t_speed* cells, t_speed* tmp_cells, t_ocl 
   
   return tot_u / (float)tot_cells;
 
+}
+
+float propagate_second(const t_param params, t_speed* cells, t_speed* tmp_cells, t_ocl ocl)
+{
+  int tot_cells = 0;    /* no. of cells used in calculation */
+  float tot_u = 0.f;    /* accumulated magnitudes of velocity for each cell */
+
+  int* sum_cells = (int*)malloc(sizeof(int)  * params.num_wkg);
+  float* sum_u = (float*)malloc(sizeof(float)  * params.num_wkg);
+  cl_int err;
+
+  // Set kernel arguments
+  err = clSetKernelArg(ocl.propagate, 0, sizeof(cl_mem), &ocl.tmp_cells);
+  checkError(err, "setting propagate arg 0", __LINE__);
+  err = clSetKernelArg(ocl.propagate, 1, sizeof(cl_mem), &ocl.cells);
+  checkError(err, "setting propagate arg 1", __LINE__);
+  err = clSetKernelArg(ocl.propagate, 2, sizeof(cl_mem), &ocl.obstacles);
+  checkError(err, "setting propagate arg 2", __LINE__);
+  err = clSetKernelArg(ocl.propagate, 3, sizeof(cl_int), &params.nx);
+  checkError(err, "setting propagate arg 3", __LINE__);
+  err = clSetKernelArg(ocl.propagate, 4, sizeof(cl_int), &params.ny);
+  checkError(err, "setting propagate arg 4", __LINE__);
+  err = clSetKernelArg(ocl.propagate, 5, sizeof(int), &params.omega);
+  checkError(err, "setting propagate arg 5", __LINE__);
+  err = clSetKernelArg(ocl.propagate, 6, sizeof(int) * params.size_wkg, NULL);
+  checkError(err, "setting propagate arg 6", __LINE__);
+  err = clSetKernelArg(ocl.propagate, 7, sizeof(float) * params.size_wkg, NULL);
+  checkError(err, "setting propagate arg 7", __LINE__);
+  err = clSetKernelArg(ocl.propagate, 8, sizeof(cl_mem), &ocl.partial_cells);
+  checkError(err, "setting propagate arg 8", __LINE__);
+  err = clSetKernelArg(ocl.propagate, 9, sizeof(cl_mem), &ocl.partial_u);
+  checkError(err, "setting av_velocity arg 9", __LINE__);
+
+  // Enqueue kernel
+
+  size_t local[2] = {LOCAL_SIZE_X, LOCAL_SIZE_Y};
+  size_t global[2] = {params.nx, params.ny};
+  err = clEnqueueNDRangeKernel(ocl.queue, ocl.propagate,
+                               2, NULL, global, local, 0, NULL, NULL);
+  checkError(err, "enqueueing propagate kernel", __LINE__);
+
+  // Wait for kernel to finish
+  err = clFinish(ocl.queue);
+  checkError(err, "waiting for propagate kernel", __LINE__);
+
+   err = clEnqueueReadBuffer(
+    ocl.queue, ocl.partial_cells, CL_TRUE, 0,
+    sizeof(int) * params.num_wkg, sum_cells, 0, NULL, NULL);
+  checkError(err, "Reading partial_cells", __LINE__);
+  err = clEnqueueReadBuffer(
+    ocl.queue, ocl.partial_u, CL_TRUE, 0,
+    sizeof(float) * params.num_wkg, sum_u, 0, NULL, NULL);
+  checkError(err, "Reading partial_u", __LINE__);
+    
+  for (int x = 0; x < params.num_wkg; x++)
+  {
+      tot_cells += sum_cells[x];
+      tot_u += sum_u[x];
+  }
+
+  free(sum_cells);
+  free(sum_u);
+  
+  return tot_u / (float)tot_cells;
 }
 
 float av_velocity(const t_param params, t_speed* cells, int* obstacles, t_ocl ocl)
