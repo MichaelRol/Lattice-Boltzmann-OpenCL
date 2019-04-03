@@ -197,7 +197,7 @@ int main(int argc, char* argv[])
   {
     for(int jj = 0; jj < params.nx; jj++)
     {
-      tot_cells +=  1 - obstacles[jj + (params.nx * ii)];
+      tot_cells +=  !obstacles[jj + (params.nx * ii)];
     }
   }
   printf("%d", tot_cells);
