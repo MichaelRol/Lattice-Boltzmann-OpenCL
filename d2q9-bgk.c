@@ -810,7 +810,7 @@ float total_density(const t_param params, float* cells)
     {
       for (int kk = 0; kk < NSPEEDS; kk++)
       {
-        total += cells[kk*(params->nx * params->ny) + ii + jj*params->nx];
+        total += cells[kk*(params.nx * params.ny) + ii + jj*params.nx];
       }
     }
   }
@@ -852,24 +852,24 @@ int write_values(const t_param params, float* cells, int* obstacles, float* av_v
 
         for (int kk = 0; kk < NSPEEDS; kk++)
         {
-          local_density += cells[ii + jj*params.nx].speeds[kk];
+          local_density += cells[kk(params.nx * params.ny)ii + jj*params.nx];
         }
 
         /* compute x velocity component */
-        u_x = (cells[1*(params->nx * params->ny) + ii + jj*params->nx]
-               + cells[5*(params->nx * params->ny) + ii + jj*params->nx]
-               + cells[8*(params->nx * params->ny) + ii + jj*params->nx]
-               - (cells[3*(params->nx * params->ny) + ii + jj*params->nx]
-                  + cells[6*(params->nx * params->ny) + ii + jj*params->nx]
-                  + cells[[7*(params->nx * params->ny) + ii + jj*params->nx]))
+        u_x = (cells[1*(params.nx * params.ny) + ii + jj*params.nx]
+               + cells[5*(params.nx * params.ny) + ii + jj*params.nx]
+               + cells[8*(params.nx * params.ny) + ii + jj*params.nx]
+               - (cells[3*(params.nx * params.ny) + ii + jj*params.nx]
+                  + cells[6*(params.nx * params.ny) + ii + jj*params.nx]
+                  + cells[7*(params.nx * params.ny) + ii + jj*params.nx]))
               / local_density;
         /* compute y velocity component */
-        u_y = (cells[2*(params->nx * params->ny) + ii + jj*params->nx]
-               + cells[5*(params->nx * params->ny) + ii + jj*params->nx]
-               + cells[6*(params->nx * params->ny) + ii + jj*params->nx]
-               - (cells[4*(params->nx * params->ny) + ii + jj*params->nx]
-                  + cells[7*(params->nx * params->ny) + ii + jj*params->nx]
-                  + cells[8*(params->nx * params->ny) + ii + jj*params->nx]))
+        u_y = (cells[2*(params.nx * params.ny) + ii + jj*params.nx]
+               + cells[5*(params.nx * params.ny) + ii + jj*params.nx]
+               + cells[6*(params.nx * params.ny) + ii + jj*params.nx]
+               - (cells[4*(params.nx * params.ny) + ii + jj*params.nx]
+                  + cells[7*(params.nx * params.ny) + ii + jj*params.nx]
+                  + cells[8*(params.nx * params.ny) + ii + jj*params.nx]))
               / local_density;
         /* compute norm of velocity */
         u = sqrtf((u_x * u_x) + (u_y * u_y));
