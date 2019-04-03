@@ -127,12 +127,12 @@ int initialise(const char* paramfile, const char* obstaclefile,
 ** timestep calls, in order, the functions:
 ** accelerate_flow(), propagate(), rebound() & collision()
 */
-float timestep_first(const t_param params, t_speed* cells, t_speed* tmp_cells, int* obstacles, t_ocl ocl);
-float timestep_second(const t_param params, t_speed* cells, t_speed* tmp_cells, int* obstacles, t_ocl ocl);
-int accelerate_flow_first(const t_param params, t_speed* cells, int* obstacles, t_ocl ocl);
-float propagate_first(const t_param params, t_speed* cells, t_speed* tmp_cells, t_ocl ocl);
-int accelerate_flow_second(const t_param params, t_speed* cells, int* obstacles, t_ocl ocl);
-float propagate_second(const t_param params, t_speed* cells, t_speed* tmp_cells, t_ocl ocl);
+float timestep_first(const t_param params, t_ocl ocl);
+float timestep_second(const t_param params, t_ocl ocl);
+int accelerate_flow_first(const t_param params, t_ocl ocl);
+float propagate_first(const t_param params, t_ocl ocl);
+int accelerate_flow_second(const t_param params, t_ocl ocl);
+float propagate_second(const t_param params, t_ocl ocl);
 int write_values(const t_param params, t_speed* cells, int* obstacles, float* av_vels);
 
 /* finalise, including freeing up allocated memory */
@@ -209,8 +209,8 @@ int main(int argc, char* argv[])
 
   for (int tt = 0; tt < params.maxIters; tt += 2)
   {
-    av_vels[tt] = timestep_first(params, cells, tmp_cells, obstacles, ocl);
-    av_vels[tt+1] = timestep_second(params, tmp_cells, cells, obstacles, ocl);
+    av_vels[tt] = timestep_first(params, ocl);
+    av_vels[tt+1] = timestep_second(params, ocl);
 #ifdef DEBUG
     printf("==timestep: %d==\n", tt);
     printf("av velocity: %.12E\n", av_vels[tt]);
@@ -225,6 +225,14 @@ int main(int argc, char* argv[])
   usrtim = timstr.tv_sec + (timstr.tv_usec / 1000000.0);
   timstr = ru.ru_stime;
   systim = timstr.tv_sec + (timstr.tv_usec / 1000000.0);
+  
+  err = clFinish(ocl.queue);
+  checkError(err, "waiting for queue", __LINE__);
+  
+  err = clEnqueueReadBuffer(
+    ocl.queue, ocl.cells, CL_TRUE, 0,
+    sizeof(t_speed) * params.nx * params.ny, cells, 0, NULL, NULL);
+  checkError(err, "reading cells data", __LINE__);
 
   /* write final values and free memory */
   printf("==done==\n");
@@ -238,23 +246,23 @@ int main(int argc, char* argv[])
   return EXIT_SUCCESS;
 }
 
-float timestep_first(const t_param params, t_speed* cells, t_speed* tmp_cells, int* obstacles, t_ocl ocl)
+float timestep_first(const t_param params, t_ocl ocl)
 {
   cl_int err;
-  accelerate_flow_first(params, cells, obstacles, ocl);
-  float av = propagate_first(params, cells, tmp_cells, ocl);
+  accelerate_flow_first(params, ocl);
+  float av = propagate_first(params, ocl);
   return av;
 }
 
-float timestep_second(const t_param params, t_speed* cells, t_speed* tmp_cells, int* obstacles, t_ocl ocl)
+float timestep_second(const t_param params, t_ocl ocl)
 {
   cl_int err;
-  accelerate_flow_second(params, cells, obstacles, ocl);
-  float av = propagate_second(params, cells, tmp_cells, ocl);
+  accelerate_flow_second(params, ocl);
+  float av = propagate_second(params, ocl);
   return av;
 }
 
-int accelerate_flow_first(const t_param params, t_speed* cells, int* obstacles, t_ocl ocl)
+int accelerate_flow_first(const t_param params, t_ocl ocl)
 {
   cl_int err;
 
@@ -278,14 +286,14 @@ int accelerate_flow_first(const t_param params, t_speed* cells, int* obstacles, 
                                1, NULL, global, NULL, 0, NULL, NULL);
   checkError(err, "enqueueing accelerate_flow kernel", __LINE__);
 
-  // Wait for kernel to finish
-  err = clFinish(ocl.queue);
-  checkError(err, "waiting for accelerate_flow kernel", __LINE__);
+  // // Wait for kernel to finish
+  // err = clFinish(ocl.queue);
+  // checkError(err, "waiting for accelerate_flow kernel", __LINE__);
 
   return EXIT_SUCCESS;
 }
 
-int accelerate_flow_second(const t_param params, t_speed* cells, int* obstacles, t_ocl ocl)
+int accelerate_flow_second(const t_param params, t_ocl ocl)
 {
   cl_int err;
 
@@ -309,14 +317,14 @@ int accelerate_flow_second(const t_param params, t_speed* cells, int* obstacles,
                                1, NULL, global, NULL, 0, NULL, NULL);
   checkError(err, "enqueueing accelerate_flow kernel", __LINE__);
 
-  // Wait for kernel to finish
-  err = clFinish(ocl.queue);
-  checkError(err, "waiting for accelerate_flow kernel", __LINE__);
+  // // Wait for kernel to finish
+  // err = clFinish(ocl.queue);
+  // checkError(err, "waiting for accelerate_flow kernel", __LINE__);
 
   return EXIT_SUCCESS;
 }
 
-float propagate_first(const t_param params, t_speed* cells, t_speed* tmp_cells, t_ocl ocl)
+float propagate_first(const t_param params, t_ocl ocl)
 {
   int tot_cells = 0;    /* no. of cells used in calculation */
   float tot_u = 0.f;    /* accumulated magnitudes of velocity for each cell */
@@ -381,7 +389,7 @@ float propagate_first(const t_param params, t_speed* cells, t_speed* tmp_cells, 
 
 }
 
-float propagate_second(const t_param params, t_speed* cells, t_speed* tmp_cells, t_ocl ocl)
+float propagate_second(const t_param params, t_ocl ocl)
 {
   int tot_cells = 0;    /* no. of cells used in calculation */
   float tot_u = 0.f;    /* accumulated magnitudes of velocity for each cell */

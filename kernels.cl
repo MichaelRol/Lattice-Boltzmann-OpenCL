@@ -61,7 +61,9 @@ kernel void propagate(global t_speed* cells,
   const int y_s = (jj == 0) ? (jj + ny - 1) : (jj - 1);
   const int x_w = (ii == 0) ? (ii + nx - 1) : (ii - 1);
 
-  const float c_sq = 1.f / 3.f; /* square of speed of sound */
+  const float c_sq = 3.f; /* square of speed of sound */
+  const float halfc_sqsq = 4.5f;
+  const float halfc_sq = 1.5f;
   const float w0 = 4.f / 9.f;  /* weighting factor */
   const float w1 = 1.f / 9.f;  /* weighting factor */
   const float w2 = 1.f / 36.f; /* weighting factor */
@@ -83,19 +85,6 @@ kernel void propagate(global t_speed* cells,
   const float speed6 = cells[x_e + y_s*nx].speeds[6];
   const float speed7 = cells[x_e + y_n*nx].speeds[7];
   const float speed8 = cells[x_w + y_n*nx].speeds[8];
-
-  /* propagate densities from neighbouring cells, following
-  ** appropriate directions of travel and writing into
-  ** scratch space grid */
-  // tmp_cells[ii + jj*nx].speeds[0] = cells[ii + jj*nx].speeds[0]; /* central cell, no movement */
-  // tmp_cells[ii + jj*nx].speeds[1] = cells[x_w + jj*nx].speeds[1]; /* east */
-  // tmp_cells[ii + jj*nx].speeds[2] = cells[ii + y_s*nx].speeds[2]; /* north */
-  // tmp_cells[ii + jj*nx].speeds[3] = cells[x_e + jj*nx].speeds[3]; /* west */
-  // tmp_cells[ii + jj*nx].speeds[4] = cells[ii + y_n*nx].speeds[4]; /* south */
-  // tmp_cells[ii + jj*nx].speeds[5] = cells[x_w + y_s*nx].speeds[5]; /* north-east */
-  // tmp_cells[ii + jj*nx].speeds[6] = cells[x_e + y_s*nx].speeds[6]; /* north-west */
-  // tmp_cells[ii + jj*nx].speeds[7] = cells[x_e + y_n*nx].speeds[7]; /* south-west */
-  // tmp_cells[ii + jj*nx].speeds[8] = cells[x_w + y_n*nx].speeds[8]; /* south-east */
 
   /* compute local density total */
   float local_density = 0.f;
@@ -144,7 +133,7 @@ kernel void propagate(global t_speed* cells,
   {
     /* velocity squared */
     const float u_sq = u_x * u_x + u_y * u_y;
-
+    const float u_sqhalfc_sq = u_sq * halfc_sq;
     /* directional velocity components */
     float u[NSPEEDS];
     u[1] =   u_x;        /* east */
@@ -160,33 +149,33 @@ kernel void propagate(global t_speed* cells,
     float d_equ[NSPEEDS];
     /* zero velocity density: weight w0 */
     d_equ[0] = w0 * local_density
-               * (1.f - u_sq / (2.f * c_sq));
+                * (1.f - u_sq * halfc_sq);
     /* axis speeds: weight w1 */
-    d_equ[1] = w1 * local_density * (1.f + u[1] / c_sq
-                                     + (u[1] * u[1]) / (2.f * c_sq * c_sq)
-                                     - u_sq / (2.f * c_sq));
-    d_equ[2] = w1 * local_density * (1.f + u[2] / c_sq
-                                     + (u[2] * u[2]) / (2.f * c_sq * c_sq)
-                                     - u_sq / (2.f * c_sq));
-    d_equ[3] = w1 * local_density * (1.f + u[3] / c_sq
-                                     + (u[3] * u[3]) / (2.f * c_sq * c_sq)
-                                     - u_sq / (2.f * c_sq));
-    d_equ[4] = w1 * local_density * (1.f + u[4] / c_sq
-                                     + (u[4] * u[4]) / (2.f * c_sq * c_sq)
-                                     - u_sq / (2.f * c_sq));
+    d_equ[1] = w1 * local_density * (1.f + u[1] * c_sq
+                                      + (u[1] * u[1]) * halfc_sqsq
+                                      - u_sqhalfc_sq);
+    d_equ[2] = w1 * local_density * (1.f + u[2] * c_sq
+                                      + (u[2] * u[2]) * halfc_sqsq
+                                      - u_sqhalfc_sq);
+    d_equ[3] = w1 * local_density * (1.f + u[3] * c_sq
+                                      + (u[3] * u[3]) * halfc_sqsq
+                                      - u_sqhalfc_sq);
+    d_equ[4] = w1 * local_density * (1.f + u[4] * c_sq
+                                      + (u[4] * u[4]) * halfc_sqsq
+                                      - u_sqhalfc_sq);
     /* diagonal speeds: weight w2 */
-    d_equ[5] = w2 * local_density * (1.f + u[5] / c_sq
-                                     + (u[5] * u[5]) / (2.f * c_sq * c_sq)
-                                     - u_sq / (2.f * c_sq));
-    d_equ[6] = w2 * local_density * (1.f + u[6] / c_sq
-                                     + (u[6] * u[6]) / (2.f * c_sq * c_sq)
-                                     - u_sq / (2.f * c_sq));
-    d_equ[7] = w2 * local_density * (1.f + u[7] / c_sq
-                                     + (u[7] * u[7]) / (2.f * c_sq * c_sq)
-                                     - u_sq / (2.f * c_sq));
-    d_equ[8] = w2 * local_density * (1.f + u[8] / c_sq
-                                     + (u[8] * u[8]) / (2.f * c_sq * c_sq)
-                                     - u_sq / (2.f * c_sq));
+    d_equ[5] = w2 * local_density * (1.f + u[5] * c_sq
+                                      + (u[5] * u[5]) * halfc_sqsq
+                                      - u_sqhalfc_sq);
+    d_equ[6] = w2 * local_density * (1.f + u[6] * c_sq
+                                      + (u[6] * u[6]) * halfc_sqsq
+                                      - u_sqhalfc_sq);
+    d_equ[7] = w2 * local_density * (1.f + u[7] * c_sq
+                                      + (u[7] * u[7]) * halfc_sqsq
+                                      - u_sqhalfc_sq);
+    d_equ[8] = w2 * local_density * (1.f + u[8] * c_sq
+                                      + (u[8] * u[8]) * halfc_sqsq
+                                      - u_sqhalfc_sq);
 
       /* relaxation step */
     tmp_cells[ii + jj*nx].speeds[0] = speed0
@@ -222,22 +211,41 @@ kernel void propagate(global t_speed* cells,
     local_u[local_idX + (num_wrk_itemsX * local_idY)] = obstacles[ii + jj*nx] ? 0.f : (float)pow(((u_x * u_x) + (u_y * u_y)), 0.5f);
     local_cells[local_idX + (num_wrk_itemsX * local_idY)] = obstacles[ii + jj*nx] ? 0 : 1;
     
+    // Loop for computing localSums : divide WorkGroup into 2 parts
+  for (uint stride = (num_wrk_itemsX * num_wrk_itemsY)/2; stride>0; stride /=2)
+  {
+      // Waiting for each 2x2 addition into given workgroup
+      barrier(CLK_LOCAL_MEM_FENCE);
 
-    barrier(CLK_LOCAL_MEM_FENCE);
-
-    int cellSum;
-    float uSum;
-
-    if (local_idX == 1 && local_idY == 1) {
-      cellSum = 0;                            
-      uSum = 0.f;
-      for (int i=0; i<num_wrk_itemsX * num_wrk_itemsY; i++) {        
-          cellSum += local_cells[i];
-          uSum += local_u[i];             
+      // Add elements 2 by 2 between local_id and local_id + stride
+      if (local_idX + (num_wrk_itemsX * local_idY) < stride){
+        local_cells[local_idX + (num_wrk_itemsX * local_idY)] +=  local_cells[local_idX + stride + (num_wrk_itemsX * (local_idY))];
+        local_u[local_idX + (num_wrk_itemsX * local_idY)] +=  local_u[local_idX + stride + (num_wrk_itemsX * (local_idY))];
       }
-      partial_cells[group_idX + ((nx / num_wrk_itemsX) * group_idY)] = cellSum;
-      partial_u[group_idX + ((nx / num_wrk_itemsX) * group_idY)] = uSum;                                       
-   }
+  }
+
+  // Write result into partialSums[nWorkGroups]
+  if (local_idX + (num_wrk_itemsX * local_idY) == 0){
+    partial_cells[group_idX + ((nx / num_wrk_itemsX) * group_idY)] = local_cells[0];
+    partial_u[group_idX + ((nx / num_wrk_itemsX) * group_idY)] = local_u[0]; 
+  }
+    
+
+  // barrier(CLK_LOCAL_MEM_FENCE);
+
+  // int cellSum;
+  // float uSum;
+
+  // if (local_idX == 1 && local_idY == 1) {
+  //   cellSum = 0;                            
+  //   uSum = 0.f;
+  //   for (int i=0; i<num_wrk_itemsX * num_wrk_itemsY; i++) {        
+  //       cellSum += local_cells[i];
+  //       uSum += local_u[i];             
+  //   }
+  //   partial_cells[group_idX + ((nx / num_wrk_itemsX) * group_idY)] = cellSum;
+  //   partial_u[group_idX + ((nx / num_wrk_itemsX) * group_idY)] = uSum;                                       
+  // }
 
   
 }
@@ -292,21 +300,23 @@ kernel void av_velocity(global t_speed* cells,
     local_u[local_idX + (num_wrk_itemsX * local_idY)] = (float)pow(((u_x * u_x) + (u_y * u_y)), 0.5f);
     local_cells[local_idX + (num_wrk_itemsX * local_idY)] = 1;
 
-    barrier(CLK_LOCAL_MEM_FENCE);
+    // Loop for computing localSums : divide WorkGroup into 2 parts
+  for (uint stride = (num_wrk_itemsX * num_wrk_itemsY)/2; stride>0; stride /=2)
+  {
+      // Waiting for each 2x2 addition into given workgroup
+      barrier(CLK_LOCAL_MEM_FENCE);
 
-    int cellSum;
-    float uSum;
-
-    if (local_idX == 1 && local_idY == 1) {
-      cellSum = 0;                            
-      uSum = 0.f;
-      for (int i=0; i<num_wrk_itemsX * num_wrk_itemsY; i++) {        
-          cellSum += local_cells[i];
-          uSum += local_u[i];             
+      // Add elements 2 by 2 between local_id and local_id + stride
+      if (local_idX + (num_wrk_itemsX * local_idY) < stride){
+        local_cells[local_idX + (num_wrk_itemsX * local_idY)] +=  local_cells[local_idX + stride + (num_wrk_itemsX * (local_idY))];
+        local_u[local_idX + (num_wrk_itemsX * local_idY)] +=  local_u[local_idX + stride + (num_wrk_itemsX * (local_idY))];
       }
-      partial_cells[group_idX + ((nx / num_wrk_itemsX) * group_idY)] = cellSum;
-      partial_u[group_idX + ((nx / num_wrk_itemsX) * group_idY)] = uSum;                                       
-   }
+  }
 
+  // Write result into partialSums[nWorkGroups]
+  if (local_idX + (num_wrk_itemsX * local_idY) == 0){
+    partial_cells[group_idX + ((nx / num_wrk_itemsX) * group_idY)] = local_cells[0];
+    partial_u[group_idX + ((nx / num_wrk_itemsX) * group_idY)] = local_u[0]; 
+  }
   }
 }
