@@ -391,7 +391,7 @@ float propagate_first(const t_param params, t_ocl ocl, int tt)
 
 }
 
-float propagate_second(const t_param params, t_ocl ocl)
+float propagate_second(const t_param params, t_ocl ocl, int tt)
 {
   // int tot_cells = 0;    /* no. of cells used in calculation */
   float tot_u = 0.f;    /* accumulated magnitudes of velocity for each cell */
