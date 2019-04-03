@@ -193,9 +193,9 @@ int main(int argc, char* argv[])
 
   int tot_cells;
 
-  for(uint ii = 0; ii < params.ny; ii++)
+  for(int ii = 0; ii < params.ny; ii++)
   {
-    for(uint jj = 0; jj < params.nx; jj++)
+    for(int jj = 0; jj < params.nx; jj++)
     {
       tot_cells += !obstacles[jj + (params.nx * ii)];
     }
