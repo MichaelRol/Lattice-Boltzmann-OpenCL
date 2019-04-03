@@ -227,7 +227,7 @@ kernel void propagate(global t_speed* cells,
     int cellSum;
     float uSum;
 
-    if (local_idX == 1 && local_idY == 1) {
+    if (local_idX == 2 && local_idY == 2) {
       cellSum = 0;                            
       uSum = 0.f;
       for (int i=0; i<num_wrk_itemsX * num_wrk_itemsY; i++) {        
