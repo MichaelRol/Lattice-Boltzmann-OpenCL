@@ -144,10 +144,10 @@ int finalise(const t_param* params, float** cells_ptr, float** tmp_cells_ptr,
 float total_density(const t_param params, float* cells);
 
 /* compute average velocity */
-float av_velocity(const t_param params, t_ocl ocl);
+float av_velocity(const t_param params, t_ocl ocl, int tot_cells);
 
 /* calculate Reynolds number */
-float calc_reynolds(const t_param params, t_ocl ocl);
+float calc_reynolds(const t_param params, t_ocl ocl, int tot_cells);
 
 /* utility functions */
 void checkError(cl_int err, const char *op, const int line);
@@ -221,8 +221,8 @@ int main(int argc, char* argv[])
 
   for (int tt = 0; tt < params.maxIters; tt += 2)
   {
-    av_vels[tt] = timestep_first(params, ocl);
-    av_vels[tt+1] = timestep_second(params, ocl);
+    av_vels[tt] = timestep_first(params, ocl)/float(tot_cells);
+    av_vels[tt+1] = timestep_second(params, ocl)float(tot_cells);
 #ifdef DEBUG
     printf("==timestep: %d==\n", tt);
     printf("av velocity: %.12E\n", av_vels[tt]);
@@ -248,7 +248,7 @@ int main(int argc, char* argv[])
 
   /* write final values and free memory */
   printf("==done==\n");
-  printf("Reynolds number:\t\t%.12E\n", calc_reynolds(params, ocl));
+  printf("Reynolds number:\t\t%.12E\n", calc_reynolds(params, ocl, tot_cells));
   printf("Elapsed time:\t\t\t%.6lf (s)\n", toc - tic);
   printf("Elapsed user CPU time:\t\t%.6lf (s)\n", usrtim);
   printf("Elapsed system CPU time:\t%.6lf (s)\n", systim);
@@ -365,7 +365,7 @@ float propagate_first(const t_param params, t_ocl ocl)
   // err = clSetKernelArg(ocl.propagate, 8, sizeof(cl_mem), &ocl.partial_cells);
   // checkError(err, "setting propagate arg 8", __LINE__);
   err = clSetKernelArg(ocl.propagate, 7, sizeof(cl_mem), &ocl.partial_u);
-  checkError(err, "setting av_velocity arg 7", __LINE__);
+  checkError(err, "setting propagate arg 7", __LINE__);
 
   // Enqueue kernel
 
@@ -430,7 +430,7 @@ float propagate_second(const t_param params, t_ocl ocl)
   // err = clSetKernelArg(ocl.propagate, 8, sizeof(cl_mem), &ocl.partial_cells);
   // checkError(err, "setting propagate arg 8", __LINE__);
   err = clSetKernelArg(ocl.propagate, 7, sizeof(cl_mem), &ocl.partial_u);
-  checkError(err, "setting av_velocity arg 7", __LINE__);
+  checkError(err, "setting propagate arg 7", __LINE__);
 
   // Enqueue kernel
 
@@ -463,7 +463,7 @@ float propagate_second(const t_param params, t_ocl ocl)
   return tot_u;
 }
 
-float av_velocity(const t_param params, t_ocl ocl)
+float av_velocity(const t_param params, t_ocl ocl, int tot_cells)
 {
   // int tot_cells = 0;    /* no. of cells used in calculation */
   float tot_u = 0.f;    /* accumulated magnitudes of velocity for each cell */
@@ -521,7 +521,7 @@ float av_velocity(const t_param params, t_ocl ocl)
   // free(sum_cells);
   free(sum_u);
   
-  return tot_u;
+  return tot_u/(float)tot_cells;
 
 }
 
@@ -803,11 +803,11 @@ int finalise(const t_param* params, float** cells_ptr, float** tmp_cells_ptr,
 }
 
 
-float calc_reynolds(const t_param params, t_ocl ocl)
+float calc_reynolds(const t_param params, t_ocl ocl, int tot_cells)
 {
   const float viscosity = 1.f / 6.f * (2.f / params.omega - 1.f);
 
-  return av_velocity(params, ocl) * params.reynolds_dim / viscosity;
+  return av_velocity(params, ocl, tot_cells) * params.reynolds_dim / viscosity;
 }
 
 float total_density(const t_param params, float* cells)
