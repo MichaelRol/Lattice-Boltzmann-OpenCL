@@ -357,14 +357,14 @@ float propagate_first(const t_param params, t_ocl ocl)
   checkError(err, "setting propagate arg 4", __LINE__);
   err = clSetKernelArg(ocl.propagate, 5, sizeof(int), &params.omega);
   checkError(err, "setting propagate arg 5", __LINE__);
-  err = clSetKernelArg(ocl.propagate, 6, sizeof(int) * params.size_wkg, NULL);
+  // err = clSetKernelArg(ocl.propagate, 6, sizeof(int) * params.size_wkg, NULL);
+  // checkError(err, "setting propagate arg 6", __LINE__);
+  err = clSetKernelArg(ocl.propagate, 6, sizeof(float) * params.size_wkg, NULL);
   checkError(err, "setting propagate arg 6", __LINE__);
-  err = clSetKernelArg(ocl.propagate, 7, sizeof(float) * params.size_wkg, NULL);
-  checkError(err, "setting propagate arg 7", __LINE__);
   // err = clSetKernelArg(ocl.propagate, 8, sizeof(cl_mem), &ocl.partial_cells);
   // checkError(err, "setting propagate arg 8", __LINE__);
-  err = clSetKernelArg(ocl.propagate, 8, sizeof(cl_mem), &ocl.partial_u);
-  checkError(err, "setting av_velocity arg 8", __LINE__);
+  err = clSetKernelArg(ocl.propagate, 7, sizeof(cl_mem), &ocl.partial_u);
+  checkError(err, "setting av_velocity arg 7", __LINE__);
 
   // Enqueue kernel
 
@@ -422,14 +422,14 @@ float propagate_second(const t_param params, t_ocl ocl)
   checkError(err, "setting propagate arg 4", __LINE__);
   err = clSetKernelArg(ocl.propagate, 5, sizeof(int), &params.omega);
   checkError(err, "setting propagate arg 5", __LINE__);
-  err = clSetKernelArg(ocl.propagate, 6, sizeof(int) * params.size_wkg, NULL);
+  // err = clSetKernelArg(ocl.propagate, 6, sizeof(int) * params.size_wkg, NULL);
+  // checkError(err, "setting propagate arg 6", __LINE__);
+  err = clSetKernelArg(ocl.propagate, 6, sizeof(float) * params.size_wkg, NULL);
   checkError(err, "setting propagate arg 6", __LINE__);
-  err = clSetKernelArg(ocl.propagate, 7, sizeof(float) * params.size_wkg, NULL);
-  checkError(err, "setting propagate arg 7", __LINE__);
   // err = clSetKernelArg(ocl.propagate, 8, sizeof(cl_mem), &ocl.partial_cells);
   // checkError(err, "setting propagate arg 8", __LINE__);
-  err = clSetKernelArg(ocl.propagate, 8, sizeof(cl_mem), &ocl.partial_u);
-  checkError(err, "setting av_velocity arg 8", __LINE__);
+  err = clSetKernelArg(ocl.propagate, 7, sizeof(cl_mem), &ocl.partial_u);
+  checkError(err, "setting av_velocity arg 7", __LINE__);
 
   // Enqueue kernel
 
@@ -484,12 +484,12 @@ float av_velocity(const t_param params, t_ocl ocl)
   checkError(err, "setting av_velocity arg 3", __LINE__);
   err = clSetKernelArg(ocl.av_velocity, 4, sizeof(int) * params.size_wkg, NULL);
   checkError(err, "setting av_velocity arg 4", __LINE__);
-  err = clSetKernelArg(ocl.av_velocity, 5, sizeof(float) * params.size_wkg, NULL);
-  checkError(err, "setting av_velocity arg 5", __LINE__);
+  // err = clSetKernelArg(ocl.av_velocity, 5, sizeof(float) * params.size_wkg, NULL);
+  // checkError(err, "setting av_velocity arg 5", __LINE__);
   // err = clSetKernelArg(ocl.av_velocity, 6, sizeof(cl_mem), &ocl.partial_cells);
   // checkError(err, "setting av_velocity arg 6", __LINE__);
-  err = clSetKernelArg(ocl.av_velocity, 6, sizeof(cl_mem), &ocl.partial_u);
-  checkError(err, "setting av_velocity arg 6", __LINE__);
+  err = clSetKernelArg(ocl.av_velocity, 5, sizeof(cl_mem), &ocl.partial_u);
+  checkError(err, "setting av_velocity arg 5", __LINE__);
 
   // Enqueue kernel
   size_t global[2] = {params.nx, params.ny};
