@@ -24,10 +24,10 @@ kernel void accelerate_flow(global float* cells,
 
   /* if the cell is not occupied and
   ** we don't send a negative density */
-  // bool condition = !obstacles[ii + jj* nx]
-  //     && (cells[3*(nx * ny) + ii + jj*nx] - w1) > 0.f
-  //     && (cells[6*(nx * ny) + ii + jj*nx] - w2) > 0.f
-  //     && (cells[7*(nx * ny) + ii + jj*nx] - w2) > 0.f;
+  bool condition = !obstacles[ii + jj* nx]
+      && (cells[3*(nx * ny) + ii + jj*nx] - w1) > 0.f
+      && (cells[6*(nx * ny) + ii + jj*nx] - w2) > 0.f
+      && (cells[7*(nx * ny) + ii + jj*nx] - w2) > 0.f;
 
 if (!obstacles[ii + jj* nx]
       && (cells[3*(nx * ny) + ii + jj*nx] - w1) > 0.f
