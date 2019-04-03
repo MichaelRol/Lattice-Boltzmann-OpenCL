@@ -191,6 +191,17 @@ int main(int argc, char* argv[])
   /* initialise our data structures and load values from file */
   initialise(paramfile, obstaclefile, &params, &cells, &tmp_cells, &obstacles, &av_vels, &ocl);
 
+  int tot_cells;
+
+  for(uint ii = 0; ii < params.ny; ii++)
+  {
+    for(uint jj = 0; jj < params.nx; jj++)
+    {
+      tot_cells += !obstacles[jj + (params.nx * ii)];
+    }
+  }
+  
+
   /* iterate for maxIters timesteps */
   gettimeofday(&timstr, NULL);
   tic = timstr.tv_sec + (timstr.tv_usec / 1000000.0);
@@ -209,8 +220,8 @@ int main(int argc, char* argv[])
 
   for (int tt = 0; tt < params.maxIters; tt += 2)
   {
-    av_vels[tt] = timestep_first(params, ocl);
-    av_vels[tt+1] = timestep_second(params, ocl);
+    av_vels[tt] = timestep_first(params, ocl)/(float)tot_cells;
+    av_vels[tt+1] = timestep_second(params, ocl)/(float)tot_cells;
 #ifdef DEBUG
     printf("==timestep: %d==\n", tt);
     printf("av velocity: %.12E\n", av_vels[tt]);
@@ -326,10 +337,10 @@ int accelerate_flow_second(const t_param params, t_ocl ocl)
 
 float propagate_first(const t_param params, t_ocl ocl)
 {
-  int tot_cells = 0;    /* no. of cells used in calculation */
+  // int tot_cells = 0;    /* no. of cells used in calculation */
   float tot_u = 0.f;    /* accumulated magnitudes of velocity for each cell */
 
-  int* sum_cells = (int*)malloc(sizeof(int)  * params.num_wkg);
+  // int* sum_cells = (int*)malloc(sizeof(int)  * params.num_wkg);
   float* sum_u = (float*)malloc(sizeof(float)  * params.num_wkg);
   cl_int err;
 
@@ -350,10 +361,10 @@ float propagate_first(const t_param params, t_ocl ocl)
   checkError(err, "setting propagate arg 6", __LINE__);
   err = clSetKernelArg(ocl.propagate, 7, sizeof(float) * params.size_wkg, NULL);
   checkError(err, "setting propagate arg 7", __LINE__);
-  err = clSetKernelArg(ocl.propagate, 8, sizeof(cl_mem), &ocl.partial_cells);
-  checkError(err, "setting propagate arg 8", __LINE__);
-  err = clSetKernelArg(ocl.propagate, 9, sizeof(cl_mem), &ocl.partial_u);
-  checkError(err, "setting av_velocity arg 9", __LINE__);
+  // err = clSetKernelArg(ocl.propagate, 8, sizeof(cl_mem), &ocl.partial_cells);
+  // checkError(err, "setting propagate arg 8", __LINE__);
+  err = clSetKernelArg(ocl.propagate, 8, sizeof(cl_mem), &ocl.partial_u);
+  checkError(err, "setting av_velocity arg 8", __LINE__);
 
   // Enqueue kernel
 
@@ -367,10 +378,10 @@ float propagate_first(const t_param params, t_ocl ocl)
   // err = clFinish(ocl.queue);
   // checkError(err, "waiting for propagate kernel", __LINE__);
 
-   err = clEnqueueReadBuffer(
-    ocl.queue, ocl.partial_cells, CL_TRUE, 0,
-    sizeof(int) * params.num_wkg, sum_cells, 0, NULL, NULL);
-  checkError(err, "Reading partial_cells", __LINE__);
+  //  err = clEnqueueReadBuffer(
+  //   ocl.queue, ocl.partial_cells, CL_TRUE, 0,
+  //   sizeof(int) * params.num_wkg, sum_cells, 0, NULL, NULL);
+  // checkError(err, "Reading partial_cells", __LINE__);
   err = clEnqueueReadBuffer(
     ocl.queue, ocl.partial_u, CL_TRUE, 0,
     sizeof(float) * params.num_wkg, sum_u, 0, NULL, NULL);
@@ -378,23 +389,23 @@ float propagate_first(const t_param params, t_ocl ocl)
     
   for (int x = 0; x < params.num_wkg; x++)
   {
-      tot_cells += sum_cells[x];
+      // tot_cells += sum_cells[x];
       tot_u += sum_u[x];
   }
 
-  free(sum_cells);
+  // free(sum_cells);
   free(sum_u);
   
-  return tot_u / (float)tot_cells;
+  return tot_u;
 
 }
 
 float propagate_second(const t_param params, t_ocl ocl)
 {
-  int tot_cells = 0;    /* no. of cells used in calculation */
+  // int tot_cells = 0;    /* no. of cells used in calculation */
   float tot_u = 0.f;    /* accumulated magnitudes of velocity for each cell */
 
-  int* sum_cells = (int*)malloc(sizeof(int)  * params.num_wkg);
+  // int* sum_cells = (int*)malloc(sizeof(int)  * params.num_wkg);
   float* sum_u = (float*)malloc(sizeof(float)  * params.num_wkg);
   cl_int err;
 
@@ -415,10 +426,10 @@ float propagate_second(const t_param params, t_ocl ocl)
   checkError(err, "setting propagate arg 6", __LINE__);
   err = clSetKernelArg(ocl.propagate, 7, sizeof(float) * params.size_wkg, NULL);
   checkError(err, "setting propagate arg 7", __LINE__);
-  err = clSetKernelArg(ocl.propagate, 8, sizeof(cl_mem), &ocl.partial_cells);
-  checkError(err, "setting propagate arg 8", __LINE__);
-  err = clSetKernelArg(ocl.propagate, 9, sizeof(cl_mem), &ocl.partial_u);
-  checkError(err, "setting av_velocity arg 9", __LINE__);
+  // err = clSetKernelArg(ocl.propagate, 8, sizeof(cl_mem), &ocl.partial_cells);
+  // checkError(err, "setting propagate arg 8", __LINE__);
+  err = clSetKernelArg(ocl.propagate, 8, sizeof(cl_mem), &ocl.partial_u);
+  checkError(err, "setting av_velocity arg 8", __LINE__);
 
   // Enqueue kernel
 
@@ -432,10 +443,10 @@ float propagate_second(const t_param params, t_ocl ocl)
   // err = clFinish(ocl.queue);
   // checkError(err, "waiting for propagate kernel", __LINE__);
 
-   err = clEnqueueReadBuffer(
-    ocl.queue, ocl.partial_cells, CL_TRUE, 0,
-    sizeof(int) * params.num_wkg, sum_cells, 0, NULL, NULL);
-  checkError(err, "Reading partial_cells", __LINE__);
+  //  err = clEnqueueReadBuffer(
+  //   ocl.queue, ocl.partial_cells, CL_TRUE, 0,
+  //   sizeof(int) * params.num_wkg, sum_cells, 0, NULL, NULL);
+  // checkError(err, "Reading partial_cells", __LINE__);
   err = clEnqueueReadBuffer(
     ocl.queue, ocl.partial_u, CL_TRUE, 0,
     sizeof(float) * params.num_wkg, sum_u, 0, NULL, NULL);
@@ -443,14 +454,12 @@ float propagate_second(const t_param params, t_ocl ocl)
     
   for (int x = 0; x < params.num_wkg; x++)
   {
-      tot_cells += sum_cells[x];
       tot_u += sum_u[x];
   }
 
-  free(sum_cells);
   free(sum_u);
   
-  return tot_u / (float)tot_cells;
+  return tot_u;
 }
 
 float av_velocity(const t_param params, float* cells, int* obstacles, t_ocl ocl)
