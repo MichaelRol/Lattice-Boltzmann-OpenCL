@@ -82,6 +82,7 @@ typedef struct
   float density;       /* density per link */
   float accel;         /* density redistribution */
   float omega;         /* relaxation parameter */
+  int   tot_cells;
   size_t size_wkg;   /*size of work groups*/
   size_t num_wkg;      /*no, of work groups*/
 } t_param;
@@ -185,20 +186,10 @@ int main(int argc, char* argv[])
     paramfile = argv[1];
     obstaclefile = argv[2];
   }
-
+  
   /* initialise our data structures and load values from file */
   initialise(paramfile, obstaclefile, &params, &cells, &tmp_cells, &obstacles, &av_vels, &ocl);
 
-  int tot_cells;
-
-  for(int ii = 0; ii < params.ny; ii++)
-  {
-    for(int jj = 0; jj < params.nx; jj++)
-    {
-      tot_cells +=  !obstacles[jj + (params.nx * ii)];
-    }
-  }
-  tot_cells -= 7;
   printf("%d\n", tot_cells);
 
   /* iterate for maxIters timesteps */
@@ -219,8 +210,9 @@ int main(int argc, char* argv[])
 
   for (int tt = 0; tt < params.maxIters; tt += 2)
   {
-    av_vels[tt] = timestep_first(params, ocl, tt)/(float)tot_cells;
-    av_vels[tt+1] = timestep_second(params, ocl, tt)/(float)tot_cells;
+    printf("%d\n", params->tot_cells);
+    av_vels[tt] = timestep_first(params, ocl, tt)/(float)params->tot_cells;
+    av_vels[tt+1] = timestep_second(params, ocl, tt)/(float)params->tot_cells;
 #ifdef DEBUG
     printf("==timestep: %d==\n", tt);
     printf("av velocity: %.12E\n", av_vels[tt]);
@@ -620,7 +612,7 @@ int initialise(const char* paramfile, const char* obstaclefile,
       (*obstacles_ptr)[ii + jj*params->nx] = 0;
     }
   }
-
+  params->tot_cells = params->nx*params->ny;
   /* open the obstacle data file */
   fp = fopen(obstaclefile, "r");
 
@@ -644,6 +636,7 @@ int initialise(const char* paramfile, const char* obstaclefile,
 
     /* assign to array */
     (*obstacles_ptr)[xx + yy*params->nx] = blocked;
+    params->tot_cells--;
   }
 
   /* and close the file */
