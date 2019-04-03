@@ -209,8 +209,8 @@ int main(int argc, char* argv[])
   for (int tt = 0; tt < params.maxIters; tt += 2)
   {
     printf("%d\n", params.tot_cells);
-    av_vels[tt] = timestep_first(params, ocl, tt)/(float)params.tot_cells;
-    av_vels[tt+1] = timestep_second(params, ocl, tt)/(float)params.tot_cells;
+    av_vels[tt] = timestep_first(params, ocl)/(float)params.tot_cells;
+    av_vels[tt+1] = timestep_second(params, ocl)/(float)params.tot_cells;
 #ifdef DEBUG
     printf("==timestep: %d==\n", tt);
     printf("av velocity: %.12E\n", av_vels[tt]);
@@ -246,19 +246,19 @@ int main(int argc, char* argv[])
   return EXIT_SUCCESS;
 }
 
-float timestep_first(const t_param params, t_ocl ocl, int tt)
+float timestep_first(const t_param params, t_ocl ocl)
 {
   cl_int err;
   // accelerate_flow_first(params, ocl);
-  float av = propagate_first(params, ocl, tt);
+  float av = propagate_first(params, ocl);
   return av;
 }
 
-float timestep_second(const t_param params, t_ocl ocl, int tt)
+float timestep_second(const t_param params, t_ocl ocl)
 {
   cl_int err;
   // accelerate_flow_second(params, ocl);
-  float av = propagate_second(params, ocl, tt);
+  float av = propagate_second(params, ocl);
   return av;
 }
 
@@ -324,7 +324,7 @@ int accelerate_flow_second(const t_param params, t_ocl ocl)
   return EXIT_SUCCESS;
 }
 
-float propagate_first(const t_param params, t_ocl ocl, int tt)
+float propagate_first(const t_param params, t_ocl ocl)
 {
   float tot_u = 0.f;    /* accumulated magnitudes of velocity for each cell */
   float* sum_u = (float*)malloc(sizeof(float)  * params.num_wkg);
@@ -351,8 +351,6 @@ float propagate_first(const t_param params, t_ocl ocl, int tt)
   checkError(err, "setting propagate arg 8", __LINE__);
   err = clSetKernelArg(ocl.propagate, 9, sizeof(cl_float), &params.accel);
   checkError(err, "setting propagate arg 9", __LINE__);
-  err = clSetKernelArg(ocl.propagate, 10, sizeof(cl_int), &tt);
-  checkError(err, "setting propagate arg 10", __LINE__);
 
   // Enqueue kernel
 
@@ -382,7 +380,7 @@ float propagate_first(const t_param params, t_ocl ocl, int tt)
 
 }
 
-float propagate_second(const t_param params, t_ocl ocl, int tt)
+float propagate_second(const t_param params, t_ocl ocl)
 {
   // int tot_cells = 0;    /* no. of cells used in calculation */
   float tot_u = 0.f;    /* accumulated magnitudes of velocity for each cell */
@@ -412,8 +410,6 @@ float propagate_second(const t_param params, t_ocl ocl, int tt)
   checkError(err, "setting propagate arg 8", __LINE__);
   err = clSetKernelArg(ocl.propagate, 9, sizeof(cl_float), &params.accel);
   checkError(err, "setting propagate arg 9", __LINE__);
-  err = clSetKernelArg(ocl.propagate, 10, sizeof(cl_int), &tt);
-  checkError(err, "setting propagate arg 10", __LINE__);
 
   // Enqueue kernel
 
