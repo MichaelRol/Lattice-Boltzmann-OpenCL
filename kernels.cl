@@ -45,9 +45,7 @@ kernel void propagate(global float* cells,
                       global int* obstacles,
                       const int nx, const int ny,
                       const float omega, 
-                      // local int* local_cells,
                       local float* local_u,
-                      // global int* partial_cells,
                       global float* partial_u)
 {
   /* get column and row indices */
@@ -209,53 +207,26 @@ kernel void propagate(global float* cells,
       
   }
     local_u[local_idX + (num_wrk_itemsX * local_idY)] = obstacles[ii + jj*nx] ? 0.f : (float)pow(((u_x * u_x) + (u_y * u_y)), 0.5f);
-    // local_cells[local_idX + (num_wrk_itemsX * local_idY)] = obstacles[ii + jj*nx] ? 0 : 1;
     
-    // Loop for computing localSums : divide WorkGroup into 2 parts
   for (uint stride = (num_wrk_itemsX * num_wrk_itemsY)/2; stride>0; stride /=2)
   {
-      // Waiting for each 2x2 addition into given workgroup
       barrier(CLK_LOCAL_MEM_FENCE);
 
-      // Add elements 2 by 2 between local_id and local_id + stride
       if (local_idX + (num_wrk_itemsX * local_idY) < stride){
-        // local_cells[local_idX + (num_wrk_itemsX * local_idY)] +=  local_cells[local_idX + stride + (num_wrk_itemsX * (local_idY))];
         local_u[local_idX + (num_wrk_itemsX * local_idY)] +=  local_u[local_idX + stride + (num_wrk_itemsX * (local_idY))];
       }
   }
 
-  // Write result into partialSums[nWorkGroups]
   if (local_idX + (num_wrk_itemsX * local_idY) == 0){
-    // partial_cells[group_idX + ((nx / num_wrk_itemsX) * group_idY)] = local_cells[0];
     partial_u[group_idX + ((nx / num_wrk_itemsX) * group_idY)] = local_u[0]; 
   }
-    
-
-  // barrier(CLK_LOCAL_MEM_FENCE);
-
-  // int cellSum;
-  // float uSum;
-
-  // if (local_idX == 1 && local_idY == 1) {
-  //   cellSum = 0;                            
-  //   uSum = 0.f;
-  //   for (int i=0; i<num_wrk_itemsX * num_wrk_itemsY; i++) {        
-  //       cellSum += local_cells[i];
-  //       uSum += local_u[i];             
-  //   }
-  //   partial_cells[group_idX + ((nx / num_wrk_itemsX) * group_idY)] = cellSum;
-  //   partial_u[group_idX + ((nx / num_wrk_itemsX) * group_idY)] = uSum;                                       
-  // }
-
-  
+ 
 }
 
 kernel void av_velocity(global float* cells,
                       global int* obstacles,
                       int nx, int ny,
-                      // local int* local_cells,
                       local float* local_u,
-                      // global int* partial_cells,
                       global float* partial_u)
 {
   /* get column and row indices */
@@ -298,25 +269,17 @@ kernel void av_velocity(global float* cells,
                   / local_density;
     /* accumulate the norm of x- and y- velocity components */
     local_u[local_idX + (num_wrk_itemsX * local_idY)] = (float)pow(((u_x * u_x) + (u_y * u_y)), 0.5f);
-    // local_cells[local_idX + (num_wrk_itemsX * local_idY)] = 1;
+    for (uint stride = (num_wrk_itemsX * num_wrk_itemsY)/2; stride>0; stride /=2)
+    {
+        barrier(CLK_LOCAL_MEM_FENCE);
 
-    // Loop for computing localSums : divide WorkGroup into 2 parts
-  for (uint stride = (num_wrk_itemsX * num_wrk_itemsY)/2; stride>0; stride /=2)
-  {
-      // Waiting for each 2x2 addition into given workgroup
-      barrier(CLK_LOCAL_MEM_FENCE);
+        if (local_idX + (num_wrk_itemsX * local_idY) < stride){
+          local_u[local_idX + (num_wrk_itemsX * local_idY)] +=  local_u[local_idX + stride + (num_wrk_itemsX * (local_idY))];
+        }
+    }
 
-      // Add elements 2 by 2 between local_id and local_id + stride
-      if (local_idX + (num_wrk_itemsX * local_idY) < stride){
-        // local_cells[local_idX + (num_wrk_itemsX * local_idY)] +=  local_cells[local_idX + stride + (num_wrk_itemsX * (local_idY))];
-        local_u[local_idX + (num_wrk_itemsX * local_idY)] +=  local_u[local_idX + stride + (num_wrk_itemsX * (local_idY))];
-      }
-  }
-
-  // Write result into partialSums[nWorkGroups]
-  if (local_idX + (num_wrk_itemsX * local_idY) == 0){
-    // partial_cells[group_idX + ((nx / num_wrk_itemsX) * group_idY)] = local_cells[0];
-    partial_u[group_idX + ((nx / num_wrk_itemsX) * group_idY)] = local_u[0]; 
-  }
+    if (local_idX + (num_wrk_itemsX * local_idY) == 0){
+      partial_u[group_idX + ((nx / num_wrk_itemsX) * group_idY)] = local_u[0]; 
+    }
   }
 }
