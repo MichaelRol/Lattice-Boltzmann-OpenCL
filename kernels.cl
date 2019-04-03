@@ -29,10 +29,10 @@ kernel void accelerate_flow(global float* cells,
       && (cells[6*(nx * ny) + ii + jj*nx] - w2) > 0.f
       && (cells[7*(nx * ny) + ii + jj*nx] - w2) > 0.f;
 
-if (!obstacles[ii + jj* nx]
-      && (cells[3*(nx * ny) + ii + jj*nx] - w1) > 0.f
-      && (cells[6*(nx * ny) + ii + jj*nx] - w2) > 0.f
-      && (cells[7*(nx * ny) + ii + jj*nx] - w2) > 0.f){
+// if (!obstacles[ii + jj* nx]
+//       && (cells[3*(nx * ny) + ii + jj*nx] - w1) > 0.f
+//       && (cells[6*(nx * ny) + ii + jj*nx] - w2) > 0.f
+//       && (cells[7*(nx * ny) + ii + jj*nx] - w2) > 0.f){
     /* increase 'east-side' densities */
     cells[1*(nx * ny) + ii + jj*nx] += condition ? w1 : 0.f;
     cells[5*(nx * ny) + ii + jj*nx] += condition ? w2 : 0.f;
@@ -41,7 +41,7 @@ if (!obstacles[ii + jj* nx]
     cells[3*(nx * ny) + ii + jj*nx] -= condition ? w1 : 0.f;
     cells[6*(nx * ny) + ii + jj*nx] -= condition ? w2 : 0.f;
     cells[7*(nx * ny) + ii + jj*nx] -= condition ? w2 : 0.f;
-  }
+  // }
   
 }
 
