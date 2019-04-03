@@ -217,8 +217,8 @@ kernel void propagate(global t_speed* cells,
 
       // Add elements 2 by 2 between local_id and local_id + stride
       if (local_idX + (num_wrk_itemsX * local_idY) < stride){
-        local_cells[local_idX + (num_wrk_itemsX * local_idY)] +=  local_cells[local_idX + stride + (num_wrk_itemsX * (local_idY + stride))];
-        local_u[local_idX + (num_wrk_itemsX * local_idY)] +=  local_u[local_idX + stride + (num_wrk_itemsX * (local_idY + stride))];
+        local_cells[local_idX + (num_wrk_itemsX * local_idY)] +=  local_cells[local_idX + stride + (num_wrk_itemsX * (local_idY))];
+        local_u[local_idX + (num_wrk_itemsX * local_idY)] +=  local_u[local_idX + stride + (num_wrk_itemsX * (local_idY))];
       }
   }
 
