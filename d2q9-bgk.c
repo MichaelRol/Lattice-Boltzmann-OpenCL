@@ -228,7 +228,7 @@ int main(int argc, char* argv[])
 
   err = clEnqueueReadBuffer(
     ocl.queue, ocl.cells, CL_TRUE, 0,
-    sizeof(t_speeds) * params.nx * params.ny), main, 0, NULL, NULL);
+    sizeof(t_speed) * params.nx * params.ny), main, 0, NULL, NULL);
   checkError(err, "reading cells data", __LINE__);
 
   /* write final values and free memory */
