@@ -255,7 +255,7 @@ kernel void av_velocity(global float* cells,
                       int nx, int ny,
                       local int* local_cells,
                       local float* local_u,
-                      global int* partial_cells,
+                      // global int* partial_cells,
                       global float* partial_u)
 {
   /* get column and row indices */
@@ -298,7 +298,7 @@ kernel void av_velocity(global float* cells,
                   / local_density;
     /* accumulate the norm of x- and y- velocity components */
     local_u[local_idX + (num_wrk_itemsX * local_idY)] = (float)pow(((u_x * u_x) + (u_y * u_y)), 0.5f);
-    local_cells[local_idX + (num_wrk_itemsX * local_idY)] = 1;
+    // local_cells[local_idX + (num_wrk_itemsX * local_idY)] = 1;
 
     // Loop for computing localSums : divide WorkGroup into 2 parts
   for (uint stride = (num_wrk_itemsX * num_wrk_itemsY)/2; stride>0; stride /=2)
@@ -308,14 +308,14 @@ kernel void av_velocity(global float* cells,
 
       // Add elements 2 by 2 between local_id and local_id + stride
       if (local_idX + (num_wrk_itemsX * local_idY) < stride){
-        local_cells[local_idX + (num_wrk_itemsX * local_idY)] +=  local_cells[local_idX + stride + (num_wrk_itemsX * (local_idY))];
+        // local_cells[local_idX + (num_wrk_itemsX * local_idY)] +=  local_cells[local_idX + stride + (num_wrk_itemsX * (local_idY))];
         local_u[local_idX + (num_wrk_itemsX * local_idY)] +=  local_u[local_idX + stride + (num_wrk_itemsX * (local_idY))];
       }
   }
 
   // Write result into partialSums[nWorkGroups]
   if (local_idX + (num_wrk_itemsX * local_idY) == 0){
-    partial_cells[group_idX + ((nx / num_wrk_itemsX) * group_idY)] = local_cells[0];
+    // partial_cells[group_idX + ((nx / num_wrk_itemsX) * group_idY)] = local_cells[0];
     partial_u[group_idX + ((nx / num_wrk_itemsX) * group_idY)] = local_u[0]; 
   }
   }
