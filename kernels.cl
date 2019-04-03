@@ -129,15 +129,15 @@ kernel void propagate(global t_speed* cells,
   {
         /* called after propagate, so taking values from scratch space
         ** mirroring, and writing into main grid */
-        tmp_cells[ii + jj*nx].speed[0] = speed0;
-        tmp_cells[ii + jj*nx].speed[1] = speed3;
-        tmp_cells[ii + jj*nx].speed[2] = speed4;
-        tmp_cells[ii + jj*nx].speed[3] = speed1;
-        tmp_cells[ii + jj*nx].speed[4] = speed2;
-        tmp_cells[ii + jj*nx].speed[5] = speed7;
-        tmp_cells[ii + jj*nx].speed[6] = speed8;
-        tmp_cells[ii + jj*nx].speed[7] = speed5;
-        tmp_cells[ii + jj*nx].speed[8] = speed6;
+        tmp_cells[ii + jj*nx].speeds[0] = speed0;
+        tmp_cells[ii + jj*nx].speeds[1] = speed3;
+        tmp_cells[ii + jj*nx].speeds[2] = speed4;
+        tmp_cells[ii + jj*nx].speeds[3] = speed1;
+        tmp_cells[ii + jj*nx].speeds[4] = speed2;
+        tmp_cells[ii + jj*nx].speeds[5] = speed7;
+        tmp_cells[ii + jj*nx].speeds[6] = speed8;
+        tmp_cells[ii + jj*nx].speeds[7] = speed5;
+        tmp_cells[ii + jj*nx].speeds[8] = speed6;
   }
   else
   {
