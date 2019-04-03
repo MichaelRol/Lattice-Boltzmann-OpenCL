@@ -363,9 +363,9 @@ float propagate_first(const t_param params, t_ocl ocl)
                                2, NULL, global, local, 0, NULL, NULL);
   checkError(err, "enqueueing propagate kernel", __LINE__);
 
-  // Wait for kernel to finish
-  err = clFinish(ocl.queue);
-  checkError(err, "waiting for propagate kernel", __LINE__);
+  // // Wait for kernel to finish
+  // err = clFinish(ocl.queue);
+  // checkError(err, "waiting for propagate kernel", __LINE__);
 
    err = clEnqueueReadBuffer(
     ocl.queue, ocl.partial_cells, CL_TRUE, 0,
@@ -428,9 +428,9 @@ float propagate_second(const t_param params, t_ocl ocl)
                                2, NULL, global, local, 0, NULL, NULL);
   checkError(err, "enqueueing propagate kernel", __LINE__);
 
-  // Wait for kernel to finish
-  err = clFinish(ocl.queue);
-  checkError(err, "waiting for propagate kernel", __LINE__);
+  // // Wait for kernel to finish
+  // err = clFinish(ocl.queue);
+  // checkError(err, "waiting for propagate kernel", __LINE__);
 
    err = clEnqueueReadBuffer(
     ocl.queue, ocl.partial_cells, CL_TRUE, 0,
