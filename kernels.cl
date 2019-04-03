@@ -225,7 +225,7 @@ kernel void propagate(global t_speed* cells,
   if (local_idX + (num_wrk_itemsX * local_idY) == 0)
     partial_cells[group_idX + ((nx / num_wrk_itemsX) * group_idY)] = local_cells[0];
     partial_u[group_idX + ((nx / num_wrk_itemsX) * group_idY)] = local_u[0];  
- }   
+    
 
   // barrier(CLK_LOCAL_MEM_FENCE);
 
