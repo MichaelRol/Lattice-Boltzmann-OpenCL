@@ -200,6 +200,7 @@ int main(int argc, char* argv[])
       tot_cells +=  1 - obstacles[jj + (params.nx * ii)];
     }
   }
+  printf("%d", tot_cells);
   
 
   /* iterate for maxIters timesteps */
