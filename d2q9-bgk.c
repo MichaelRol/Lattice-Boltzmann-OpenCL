@@ -208,7 +208,6 @@ int main(int argc, char* argv[])
 
   for (int tt = 0; tt < params.maxIters; tt += 2)
   {
-    printf("%d\n", params.tot_cells);
     av_vels[tt] = timestep_first(params, ocl)/(float)params.tot_cells;
     av_vels[tt+1] = timestep_second(params, ocl)/(float)params.tot_cells;
 #ifdef DEBUG
