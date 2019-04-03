@@ -278,9 +278,9 @@ int accelerate_flow_first(const t_param params, t_speed* cells, int* obstacles, 
                                1, NULL, global, NULL, 0, NULL, NULL);
   checkError(err, "enqueueing accelerate_flow kernel", __LINE__);
 
-  // Wait for kernel to finish
-  err = clFinish(ocl.queue);
-  checkError(err, "waiting for accelerate_flow kernel", __LINE__);
+  // // Wait for kernel to finish
+  // err = clFinish(ocl.queue);
+  // checkError(err, "waiting for accelerate_flow kernel", __LINE__);
 
   return EXIT_SUCCESS;
 }
@@ -309,9 +309,9 @@ int accelerate_flow_second(const t_param params, t_speed* cells, int* obstacles,
                                1, NULL, global, NULL, 0, NULL, NULL);
   checkError(err, "enqueueing accelerate_flow kernel", __LINE__);
 
-  // Wait for kernel to finish
-  err = clFinish(ocl.queue);
-  checkError(err, "waiting for accelerate_flow kernel", __LINE__);
+  // // Wait for kernel to finish
+  // err = clFinish(ocl.queue);
+  // checkError(err, "waiting for accelerate_flow kernel", __LINE__);
 
   return EXIT_SUCCESS;
 }
