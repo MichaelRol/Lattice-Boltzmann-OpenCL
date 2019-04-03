@@ -190,8 +190,6 @@ int main(int argc, char* argv[])
   /* initialise our data structures and load values from file */
   initialise(paramfile, obstaclefile, &params, &cells, &tmp_cells, &obstacles, &av_vels, &ocl);
 
-  printf("%d\n", tot_cells);
-
   /* iterate for maxIters timesteps */
   gettimeofday(&timstr, NULL);
   tic = timstr.tv_sec + (timstr.tv_usec / 1000000.0);
@@ -210,7 +208,7 @@ int main(int argc, char* argv[])
 
   for (int tt = 0; tt < params.maxIters; tt += 2)
   {
-    printf("%d\n", params->tot_cells);
+    printf("%d\n", params.tot_cells);
     av_vels[tt] = timestep_first(params, ocl, tt)/(float)params.tot_cells;
     av_vels[tt+1] = timestep_second(params, ocl, tt)/(float)params.tot_cells;
 #ifdef DEBUG
