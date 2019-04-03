@@ -127,8 +127,8 @@ int initialise(const char* paramfile, const char* obstaclefile,
 ** timestep calls, in order, the functions:
 ** accelerate_flow(), propagate(), rebound() & collision()
 */
-float timestep_first(const t_param params, t_ocl ocl, int tot_cells);
-float timestep_second(const t_param params, t_ocl ocl, int tot_cells);
+float timestep_first(const t_param params, t_ocl ocl);
+float timestep_second(const t_param params, t_ocl ocl);
 int accelerate_flow_first(const t_param params, t_ocl ocl);
 float propagate_first(const t_param params, t_ocl ocl);
 int accelerate_flow_second(const t_param params, t_ocl ocl);
@@ -258,20 +258,20 @@ int main(int argc, char* argv[])
   return EXIT_SUCCESS;
 }
 
-float timestep_first(const t_param params, t_ocl ocl, int tot_cells)
+float timestep_first(const t_param params, t_ocl ocl)
 {
   cl_int err;
   accelerate_flow_first(params, ocl);
   float av = propagate_first(params, ocl);
-  return av/(float)tot_cells;
+  return av;
 }
 
-float timestep_second(const t_param params, t_ocl ocl, int tot_cells)
+float timestep_second(const t_param params, t_ocl ocl)
 {
   cl_int err;
   accelerate_flow_second(params, ocl);
   float av = propagate_second(params, ocl);
-  return av/(float)tot_cells;
+  return av;
 }
 
 int accelerate_flow_first(const t_param params, t_ocl ocl)
