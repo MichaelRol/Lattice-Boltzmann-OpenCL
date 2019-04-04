@@ -98,7 +98,7 @@ typedef struct
   cl_kernel  accelerate_flow;
   cl_kernel  propagate;
   cl_kernel  av_velocity;
-  cl_kernel  global_reduction;
+  // cl_kernel  global_reduction;
 
   cl_mem partial_cells;
   cl_mem partial_u;
@@ -134,7 +134,7 @@ int accelerate_flow_first(const t_param params, t_ocl ocl);
 float propagate_first(const t_param params, t_ocl ocl);
 int accelerate_flow_second(const t_param params, t_ocl ocl);
 float propagate_second(const t_param params, t_ocl ocl);
-int global_redction(const t_params params, t_ocl ocl);
+// int global_reduction(const t_params params, t_ocl ocl);
 int write_values(const t_param params, float* cells, int* obstacles, float* av_vels);
 
 /* finalise, including freeing up allocated memory */
@@ -374,10 +374,7 @@ float propagate_first(const t_param params, t_ocl ocl)
   for (int x = 0; x < params.num_wkg; x++)
   {
       tot_u += sum_u[x];
-  }(cl_float), &params.density);
-  // checkError(err, "setting propagate arg 8", __LINE__);
-  // err = clSetKernelArg(ocl.propagate, 9, sizeof(cl_float), &params.accel);
-  // checkError(err, "setting propagate
+  }
 
   free(sum_u);
   
@@ -443,33 +440,33 @@ float propagate_second(const t_param params, t_ocl ocl)
   return tot_u;
 }
 
-int global_reduction(const t_params params, t_ocl ocl) {
-  cl_int err;
+// int global_reduction(const t_param params, t_ocl ocl) {
+//   cl_int err;
 
-  // Set kernel arguments
-  err = clSetKernelArg(ocl.reduce, 0, sizeof(cl_mem), &ocl.partial_u);
-  checkError(err, "setting reduce arg 0", __LINE__);
-  err = clSetKernelArg(ocl.reduce, 1, sizeof(cl_mem), &ocl.av_vels);
-  checkError(err, "setting reduce arg 1", __LINE__);
-  err = clSetKernelArg(ocl.reduce, 2, sizeof(cl_int), &params.tot_cells);
-  checkError(err, "setting reduce arg 2", __LINE__);
-  err = clSetKernelArg(ocl.reduce, 3, sizeof(cl_int), &params.num_wkg);
-  checkError(err, "setting reduce arg 3", __LINE__);
+//   // Set kernel arguments
+//   err = clSetKernelArg(ocl.global_reduction, 0, sizeof(cl_mem), &ocl.partial_u);
+//   checkError(err, "setting global_reduction arg 0", __LINE__);
+//   err = clSetKernelArg(ocl.global_reduction, 1, sizeof(cl_mem), &ocl.av_vels);
+//   checkError(err, "setting global_reduction arg 1", __LINE__);
+//   err = clSetKernelArg(ocl.global_reduction, 2, sizeof(cl_int), &params.tot_cells);
+//   checkError(err, "setting global_reduction arg 2", __LINE__);
+//   err = clSetKernelArg(ocl.global_reduction, 3, sizeof(cl_int), &params.num_wkg);
+//   checkError(err, "setting global_reduction arg 3", __LINE__);
 
 
-  // Enqueue kernel
-  // size_t global[2] = {params.num_wkg, params.maxIters};
-  size_t local[1] = {params.num_wkg};
-  err = clEnqueueNDRangeKernel(ocl.queue, ocl.global_reduction,
-                               2, NULL, global, local, 0, NULL, NULL);
-  checkError(err, "enqueueing reduce kernel", __LINE__);
+//   // Enqueue kernel
+//   size_t global[2] = {params.num_wkg, params.maxIters};
+//   size_t local[1] = {params.num_wkg};
+//   err = clEnqueueNDRangeKernel(ocl.queue, ocl.global_reduction,
+//                                2, NULL, global, local, 0, NULL, NULL);
+//   checkError(err, "enqueueing global_reduction kernel", __LINE__);
 
-  // Wait for kernel to finish
-  err = clFinish(ocl.queue);
-  checkError(err, "waiting for reduce kernel", __LINE__);
+//   // Wait for kernel to finish
+//   err = clFinish(ocl.queue);
+//   checkError(err, "waiting for global_reduction kernel", __LINE__);
 
-  return EXIT_SUCCESS;
-}
+//   return EXIT_SUCCESS;
+// }
 
 float av_velocity(const t_param params, t_ocl ocl, int tot_cells)
 {
@@ -734,8 +731,8 @@ int initialise(const char* paramfile, const char* obstaclefile,
   checkError(err, "creating propagate kernel", __LINE__);
   ocl->av_velocity = clCreateKernel(ocl->program, "av_velocity", &err);
   checkError(err, "creating av_velocity kernel", __LINE__);
-  ocl->av_velocity = clCreateKernel(ocl->program, "global_reduction", &err);
-  checkError(err, "creating global_recutiom kernel", __LINE__);
+  // ocl->av_velocity = clCreateKernel(ocl->program, "global_reduction", &err);
+  // checkError(err, "creating global_recutiom kernel", __LINE__);
 
   params->size_wkg = LOCAL_SIZE_X * LOCAL_SIZE_Y;
   params->num_wkg = (params->nx * params->ny) / (LOCAL_SIZE_X * LOCAL_SIZE_Y);
@@ -790,7 +787,7 @@ int finalise(const t_param* params, float** cells_ptr, float** tmp_cells_ptr,
   clReleaseMemObject(ocl.obstacles);
   clReleaseKernel(ocl.accelerate_flow);
   clReleaseKernel(ocl.propagate);
-  clReleaseKernel(ocl.global_reduction);
+  // clReleaseKernel(ocl.global_reduction);
   clReleaseKernel(ocl.av_velocity);
   clReleaseProgram(ocl.program);
   clReleaseCommandQueue(ocl.queue);
