@@ -283,3 +283,22 @@ kernel void av_velocity(global float* cells,
     }
   }
 }
+
+kernel void global_reduction(global float* velocities,
+                   global float* av_vels,
+                   const float tot_cells,
+                   const int num_wkg) {
+
+  const int iteration = get_global_id(0);
+  const int local_id = get_local_id(0);
+
+  float vel = 0.f;
+
+  if (local_id == 0) {
+    for (int group_id = 0; group_id < num_wkg; group_id++) {
+      vel += velocities[(group_id) + (iteration * num_wkg)];
+    }
+    av_vels[iteration] = vel / tot_cells;
+  }
+
+}
