@@ -251,7 +251,7 @@ int main(int argc, char* argv[])
 float timestep_first(const t_param params, t_ocl ocl)
 {
   cl_int err;
-  // accelerate_flow_first(params, ocl);
+  accelerate_flow_first(params, ocl);
   float av = propagate_first(params, ocl);
   return av;
 }
@@ -259,7 +259,7 @@ float timestep_first(const t_param params, t_ocl ocl)
 float timestep_second(const t_param params, t_ocl ocl)
 {
   cl_int err;
-  // accelerate_flow_second(params, ocl);
+  accelerate_flow_second(params, ocl);
   float av = propagate_second(params, ocl);
   return av;
 }
@@ -288,10 +288,6 @@ int accelerate_flow_first(const t_param params, t_ocl ocl)
                                1, NULL, global, NULL, 0, NULL, NULL);
   checkError(err, "enqueueing accelerate_flow kernel", __LINE__);
 
-  // // Wait for kernel to finish
-  // err = clFinish(ocl.queue);
-  // checkError(err, "waiting for accelerate_flow kernel", __LINE__);
-
   return EXIT_SUCCESS;
 }
 
@@ -319,10 +315,6 @@ int accelerate_flow_second(const t_param params, t_ocl ocl)
                                1, NULL, global, NULL, 0, NULL, NULL);
   checkError(err, "enqueueing accelerate_flow kernel", __LINE__);
 
-  // // Wait for kernel to finish
-  // err = clFinish(ocl.queue);
-  // checkError(err, "waiting for accelerate_flow kernel", __LINE__);
-
   return EXIT_SUCCESS;
 }
 
@@ -349,10 +341,10 @@ float propagate_first(const t_param params, t_ocl ocl)
   checkError(err, "setting propagate arg 6", __LINE__);
   err = clSetKernelArg(ocl.propagate, 7, sizeof(cl_mem), &ocl.partial_u);
   checkError(err, "setting propagate arg 7", __LINE__);
-  err = clSetKernelArg(ocl.propagate, 8, sizeof(cl_float), &params.density);
-  checkError(err, "setting propagate arg 8", __LINE__);
-  err = clSetKernelArg(ocl.propagate, 9, sizeof(cl_float), &params.accel);
-  checkError(err, "setting propagate arg 9", __LINE__);
+  // err = clSetKernelArg(ocl.propagate, 8, sizeof(cl_float), &params.density);
+  // checkError(err, "setting propagate arg 8", __LINE__);
+  // err = clSetKernelArg(ocl.propagate, 9, sizeof(cl_float), &params.accel);
+  // checkError(err, "setting propagate arg 9", __LINE__);
 
   // Enqueue kernel
 
@@ -384,10 +376,8 @@ float propagate_first(const t_param params, t_ocl ocl)
 
 float propagate_second(const t_param params, t_ocl ocl)
 {
-  // int tot_cells = 0;    /* no. of cells used in calculation */
   float tot_u = 0.f;    /* accumulated magnitudes of velocity for each cell */
 
-  // int* sum_cells = (int*)malloc(sizeof(int)  * params.num_wkg);
   float* sum_u = (float*)malloc(sizeof(float)  * params.num_wkg);
   cl_int err;
 
@@ -408,10 +398,10 @@ float propagate_second(const t_param params, t_ocl ocl)
   checkError(err, "setting propagate arg 6", __LINE__);
   err = clSetKernelArg(ocl.propagate, 7, sizeof(cl_mem), &ocl.partial_u);
   checkError(err, "setting propagate arg 7", __LINE__);
-  err = clSetKernelArg(ocl.propagate, 8, sizeof(cl_float), &params.density);
-  checkError(err, "setting propagate arg 8", __LINE__);
-  err = clSetKernelArg(ocl.propagate, 9, sizeof(cl_float), &params.accel);
-  checkError(err, "setting propagate arg 9", __LINE__);
+  // err = clSetKernelArg(ocl.propagate, 8, sizeof(cl_float), &params.density);
+  // checkError(err, "setting propagate arg 8", __LINE__);
+  // err = clSetKernelArg(ocl.propagate, 9, sizeof(cl_float), &params.accel);
+  // checkError(err, "setting propagate arg 9", __LINE__);
 
   // Enqueue kernel
 
@@ -420,10 +410,6 @@ float propagate_second(const t_param params, t_ocl ocl)
   err = clEnqueueNDRangeKernel(ocl.queue, ocl.propagate,
                                2, NULL, global, local, 0, NULL, NULL);
   checkError(err, "enqueueing propagate kernel", __LINE__);
-
-  // // Wait for kernel to finish
-  // err = clFinish(ocl.queue);
-  // checkError(err, "waiting for propagate kernel", __LINE__);
 
   err = clEnqueueReadBuffer(
     ocl.queue, ocl.partial_u, CL_TRUE, 0,
