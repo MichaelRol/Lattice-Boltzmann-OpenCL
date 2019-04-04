@@ -498,7 +498,8 @@ float av_velocity(const t_param params, t_ocl ocl, int tot_cells)
   }
 
   free(sum_u);
-  
+    printf("tot_u: %f\ntot_cells: %d\n", tot_u, tot_cells);
+
   return tot_u/(float)tot_cells;
 
 }
