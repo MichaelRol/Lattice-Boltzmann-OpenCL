@@ -48,27 +48,28 @@ kernel void propagate(global float* cells,
                       const float omega, 
                       local float* local_u,
                       global float* partial_u)
-                      // float density, float accel)
+                      float density, float accel)
 {
   /* get column and row indices */
   const int ii = get_global_id(0);
   const int jj = get_global_id(1);
-  // float accel_w1 = density * accel / 9.0;
-  // float accel_w2 = density * accel / 36.0;
 
-  // bool condition = !obstacles[ii + jj* nx]
-  //     && (cells[3*(nx * ny) + ii + jj*nx] - accel_w1) > 0.f
-  //     && (cells[6*(nx * ny) + ii + jj*nx] - accel_w2) > 0.f
-  //     && (cells[7*(nx * ny) + ii + jj*nx] - accel_w2) > 0.f
-  //     && jj == ny - 2;
-  //   /* increase 'east-side' densities */
-  // cells[1*(nx * ny) + ii + jj*nx] += condition ? accel_w1 : 0.f;
-  // cells[5*(nx * ny) + ii + jj*nx] += condition ? accel_w2 : 0.f;
-  // cells[8*(nx * ny) + ii + jj*nx] += condition ? accel_w2 : 0.f;
-  // /* decrease 'west-side' densities */
-  // cells[3*(nx * ny) + ii + jj*nx] -= condition ? accel_w1 : 0.f;
-  // cells[6*(nx * ny) + ii + jj*nx] -= condition ? accel_w2 : 0.f;
-  // cells[7*(nx * ny) + ii + jj*nx] -= condition ? accel_w2 : 0.f;
+  float accel_w1 = density * accel / 9.0;
+  float accel_w2 = density * accel / 36.0;
+
+  bool condition = !obstacles[ii + jj* nx]
+      && (cells[3*(nx * ny) + ii + jj*nx] - accel_w1) > 0.f
+      && (cells[6*(nx * ny) + ii + jj*nx] - accel_w2) > 0.f
+      && (cells[7*(nx * ny) + ii + jj*nx] - accel_w2) > 0.f
+      && jj == ny - 2;
+    /* increase 'east-side' densities */
+  cells[1*(nx * ny) + ii + jj*nx] += condition ? accel_w1 : 0.f;
+  cells[5*(nx * ny) + ii + jj*nx] += condition ? accel_w2 : 0.f;
+  cells[8*(nx * ny) + ii + jj*nx] += condition ? accel_w2 : 0.f;
+  /* decrease 'west-side' densities */
+  cells[3*(nx * ny) + ii + jj*nx] -= condition ? accel_w1 : 0.f;
+  cells[6*(nx * ny) + ii + jj*nx] -= condition ? accel_w2 : 0.f;
+  cells[7*(nx * ny) + ii + jj*nx] -= condition ? accel_w2 : 0.f;
 
   /* determine indices of axis-direction neighbours
   ** respecting periodic boundary conditions (wrap around) */
