@@ -47,7 +47,7 @@ kernel void propagate(global float* cells,
                       const int nx, const int ny,
                       const float omega, 
                       local float* local_u,
-                      global float* partial_u)
+                      global float* partial_u,
                       float density, float accel)
 {
   /* get column and row indices */
