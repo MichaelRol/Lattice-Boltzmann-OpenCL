@@ -279,7 +279,7 @@ kernel void av_velocity(global float* cells,
         }
     }
 
-    if (local_idX + (num_wrk_itemsX * local_idY) == 0){
+    if (local_idX == 1 && local_idY == 1){
       partial_u[group_idX + ((nx / num_wrk_itemsX) * group_idY)] = local_u[0]; 
     }
   }
