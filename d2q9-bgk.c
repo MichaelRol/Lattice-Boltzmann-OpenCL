@@ -253,7 +253,7 @@ float timestep_first(const t_param params, t_ocl ocl)
   cl_int err;
   accelerate_flow_first(params, ocl);
   float av = propagate_first(params, ocl);
-  printf("time 1 tot_u: %f\ntot_cells: %d\n", av, params->tot_cells);
+  printf("time 1 tot_u: %f\ntot_cells: %d\n", av, params.tot_cells);
 
   return av;
 }
@@ -263,7 +263,7 @@ float timestep_second(const t_param params, t_ocl ocl)
   cl_int err;
   accelerate_flow_second(params, ocl);
   float av = propagate_second(params, ocl);
-    printf("time 2 tot_u: %f\ntot_cells: %d\n", av, params->tot_cells);
+    printf("time 2 tot_u: %f\ntot_cells: %d\n", av, params.tot_cells);
 
   return av;
 }
