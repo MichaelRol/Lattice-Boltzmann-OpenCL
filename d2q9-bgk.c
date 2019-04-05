@@ -251,7 +251,7 @@ int main(int argc, char* argv[])
 float timestep_first(const t_param params, t_ocl ocl)
 {
   cl_int err;
-  // accelerate_flow_first(params, ocl);
+  accelerate_flow_first(params, ocl);
   float av = propagate_first(params, ocl);
 
   return av;
@@ -260,7 +260,7 @@ float timestep_first(const t_param params, t_ocl ocl)
 float timestep_second(const t_param params, t_ocl ocl)
 {
   cl_int err;
-  // accelerate_flow_second(params, ocl);
+  accelerate_flow_second(params, ocl);
   float av = propagate_second(params, ocl);
 
   return av;
@@ -343,10 +343,10 @@ float propagate_first(const t_param params, t_ocl ocl)
   checkError(err, "setting propagate arg 6", __LINE__);
   err = clSetKernelArg(ocl.propagate, 7, sizeof(cl_mem), &ocl.partial_u);
   checkError(err, "setting propagate arg 7", __LINE__);
-  err = clSetKernelArg(ocl.propagate, 8, sizeof(cl_float), &params.density);
-  checkError(err, "setting propagate arg 8", __LINE__);
-  err = clSetKernelArg(ocl.propagate, 9, sizeof(cl_float), &params.accel);
-  checkError(err, "setting propagate arg 9", __LINE__);
+  // err = clSetKernelArg(ocl.propagate, 8, sizeof(cl_float), &params.density);
+  // checkError(err, "setting propagate arg 8", __LINE__);
+  // err = clSetKernelArg(ocl.propagate, 9, sizeof(cl_float), &params.accel);
+  // checkError(err, "setting propagate arg 9", __LINE__);
 
   // Enqueue kernel
 
@@ -396,10 +396,10 @@ float propagate_second(const t_param params, t_ocl ocl)
   checkError(err, "setting propagate arg 6", __LINE__);
   err = clSetKernelArg(ocl.propagate, 7, sizeof(cl_mem), &ocl.partial_u);
   checkError(err, "setting propagate arg 7", __LINE__);
-  err = clSetKernelArg(ocl.propagate, 8, sizeof(cl_float), &params.density);
-  checkError(err, "setting propagate arg 8", __LINE__);
-  err = clSetKernelArg(ocl.propagate, 9, sizeof(cl_float), &params.accel);
-  checkError(err, "setting propagate arg 9", __LINE__);
+  // err = clSetKernelArg(ocl.propagate, 8, sizeof(cl_float), &params.density);
+  // checkError(err, "setting propagate arg 8", __LINE__);
+  // err = clSetKernelArg(ocl.propagate, 9, sizeof(cl_float), &params.accel);
+  // checkError(err, "setting propagate arg 9", __LINE__);
 
   // Enqueue kernel
 
