@@ -2,7 +2,7 @@
 
 #PBS -N d2q9-bgk
 #PBS -j oe
-#PBS -o d2q9-bgk.out
+#PBS -o d2q9-bgk2.out
 #PBS -q teaching
 #PBS -l nodes=1:ppn=16:gpus=1,walltime=00:10:00
 
