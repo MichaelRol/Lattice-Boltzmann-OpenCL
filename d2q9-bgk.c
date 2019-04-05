@@ -68,8 +68,8 @@
 #define AVVELSFILE      "av_vels.dat"
 #define OCLFILE         "kernels.cl"
 
-#define LOCAL_SIZE_X 16
-#define LOCAL_SIZE_Y 16
+#define LOCAL_SIZE_X 32
+#define LOCAL_SIZE_Y 32
 
 
 /* struct to hold the parameter values */
