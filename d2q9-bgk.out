@@ -1,8 +1,8 @@
-Running on host: node46-004
-Time is: Thu Mar 28 15:59:54 GMT 2019
+Running on host: node46-001
+Time is: Fri Apr  5 13:06:52 BST 2019
 Directory is: /newhome/mr16338/Lattice-Boltzmann-OpenCL
-PBS job ID is: 8267715.master.cm.cluster
-This jobs runs on the following machines: node46-004
+PBS job ID is: 8297471.master.cm.cluster
+This jobs runs on the following machines: node46-001
 GPU selected: 0
 
 
@@ -13,9 +13,10 @@ Available OpenCL devices:
 Selected OpenCL device:
 -> Tesla K20m (index=0)
 
-15877
 ==done==
-Reynolds number:		8.420510888100E-01
-Elapsed time:			26.818700 (s)
-Elapsed user CPU time:		25.773081 (s)
-Elapsed system CPU time:	2.260656 (s)
+tot_u: 867.605896
+tot_cells: 64512
+Reynolds number:		9.952082633972E+00
+Elapsed time:			5.971144 (s)
+Elapsed user CPU time:		6.336036 (s)
+Elapsed system CPU time:	0.834873 (s)
