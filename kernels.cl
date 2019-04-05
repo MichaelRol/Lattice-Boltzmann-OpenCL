@@ -31,13 +31,13 @@ kernel void accelerate_flow(global float* cells,
       && jj == ny - 2;
 
     /* increase 'east-side' densities */
-    cells[1*(nx * ny) + ii + jj*nx] += condition ? w1 : 0.f;
-    cells[5*(nx * ny) + ii + jj*nx] += condition ? w2 : 0.f;
-    cells[8*(nx * ny) + ii + jj*nx] += condition ? w2 : 0.f;
+    cells[1*(nx * ny) + ii + jj*nx] += condition * w1;
+    cells[5*(nx * ny) + ii + jj*nx] += condition * w2;
+    cells[8*(nx * ny) + ii + jj*nx] += condition * w2;
     /* decrease 'west-side' densities */
-    cells[3*(nx * ny) + ii + jj*nx] -= condition ? w1 : 0.f;
-    cells[6*(nx * ny) + ii + jj*nx] -= condition ? w2 : 0.f;
-    cells[7*(nx * ny) + ii + jj*nx] -= condition ? w2 : 0.f;
+    cells[3*(nx * ny) + ii + jj*nx] -= condition * w1;
+    cells[6*(nx * ny) + ii + jj*nx] -= condition * w2;
+    cells[7*(nx * ny) + ii + jj*nx] -= condition * w2;
     
 }
 
@@ -48,35 +48,22 @@ kernel void propagate(global float* cells,
                       const float omega, 
                       local float* local_u,
                       global float* partial_u)
-                      // float density, float accel)
 {
   /* get column and row indices */
   const int ii = get_global_id(0);
   const int jj = get_global_id(1);
 
-  // float accel_w1 = density * accel / 9.0;
-  // float accel_w2 = density * accel / 36.0;
-
-  // bool condition = !obstacles[ii + jj* nx]
-  //     && (cells[3*(nx * ny) + ii + jj*nx] - accel_w1) > 0.f
-  //     && (cells[6*(nx * ny) + ii + jj*nx] - accel_w2) > 0.f
-  //     && (cells[7*(nx * ny) + ii + jj*nx] - accel_w2) > 0.f
-  //     && jj == ny - 2;
-  //   /* increase 'east-side' densities */
-  // cells[1*(nx * ny) + ii + jj*nx] += condition ? accel_w1 : 0.f;
-  // cells[5*(nx * ny) + ii + jj*nx] += condition ? accel_w2 : 0.f;
-  // cells[8*(nx * ny) + ii + jj*nx] += condition ? accel_w2 : 0.f;
-  // /* decrease 'west-side' densities */
-  // cells[3*(nx * ny) + ii + jj*nx] -= condition ? accel_w1 : 0.f;
-  // cells[6*(nx * ny) + ii + jj*nx] -= condition ? accel_w2 : 0.f;
-  // cells[7*(nx * ny) + ii + jj*nx] -= condition ? accel_w2 : 0.f;
-
   /* determine indices of axis-direction neighbours
   ** respecting periodic boundary conditions (wrap around) */
   const int y_n = (jj + 1) % ny;
   const int x_e = (ii + 1) % nx;
-  const int y_s = (jj == 0) ? (jj + ny - 1) : (jj - 1);
-  const int x_w = (ii == 0) ? (ii + nx - 1) : (ii - 1);
+  // const int y_s = (jj == 0) ? (jj + ny - 1) : (jj - 1);
+  // const int x_w = (ii == 0) ? (ii + nx - 1) : (ii - 1);
+
+  int mask1 = (jj == 0);
+  const int y_s = mask1 * (jj + ny - 1) + (1-mask1) * (jj - 1);
+  int mask2 = (ii == 0);
+  const int x_w = mask2 * (ii + nx - 1) + (1-mask2) * (ii - 1);
 
   const float c_sq = 3.f; /* square of speed of sound */
   const float halfc_sqsq = 4.5f;
@@ -92,6 +79,7 @@ kernel void propagate(global float* cells,
   const int num_wrk_itemsY = get_local_size(1);
   const int group_idX = get_group_id(0);
   const int group_idY = get_group_id(1);
+
 
   const float speed0 = cells[ii + jj*nx];
   const float speed1 = cells[(nx*ny) + x_w + jj*nx];
@@ -131,6 +119,7 @@ kernel void propagate(global float* cells,
                       + speed8))
                   / local_density;
  
+
 
   /* velocity squared */
   const float u_sq = u_x * u_x + u_y * u_y;
@@ -179,49 +168,56 @@ kernel void propagate(global float* cells,
                                     - u_sqhalfc_sq);
 
     /* relaxation step */
-  tmp_cells[ii + jj*nx] = obstacles[ii + jj*nx] ? speed0 : speed0
-                                          + omega
-                                          * (d_equ[0] - speed0);
-  tmp_cells[(nx*ny) + ii + jj*nx] =  obstacles[ii + jj*nx] ? speed3 : speed1
-                                          + omega
-                                          * (d_equ[1] - speed1);
-  tmp_cells[2*(nx * ny) + ii + jj*nx] =  obstacles[ii + jj*nx] ? speed4 : speed2
-                                          + omega
-                                          * (d_equ[2] - speed2);
-  tmp_cells[3*(nx * ny) + ii + jj*nx] = obstacles[ii + jj*nx] ? speed1 : speed3
-                                          + omega
-                                          * (d_equ[3] - speed3);
-  tmp_cells[4*(nx * ny) + ii + jj*nx] =  obstacles[ii + jj*nx] ? speed2 : speed4
-                                          + omega
-                                          * (d_equ[4] - speed4);
-  tmp_cells[5*(nx * ny) + ii + jj*nx] =  obstacles[ii + jj*nx] ? speed7 : speed5
-                                          + omega
-                                          * (d_equ[5] - speed5);
-  tmp_cells[6*(nx * ny) + ii + jj*nx] =  obstacles[ii + jj*nx] ? speed8 : speed6
-                                          + omega
-                                          * (d_equ[6] - speed6);
-  tmp_cells[7*(nx * ny) + ii + jj*nx] =  obstacles[ii + jj*nx] ? speed5 : speed7
-                                          + omega
-                                          * (d_equ[7] - speed7);
-  tmp_cells[8*(nx * ny) + ii + jj*nx] =  obstacles[ii + jj*nx] ? speed6 : speed8
-                                          + omega
-                                          * (d_equ[8] - speed8);
+  int mask3 = obstacles[jj*nx + ii];
+  tmp_cells[0*(nx*ny) + ii + jj*nx] = (mask3) * speed0 + (1-mask3) * (speed0 + omega * (d_equ[0] - speed0));//obstacles[jj*nx + ii] ? 0.f :obstacles[jj*nx + ii] ? speed0 :speed0
+                                          // + omega
+                                          // * (d_equ[0] - speed0);
+  tmp_cells[1*(nx*ny) + ii + jj*nx] = (mask3) * speed3 + (1-mask3) * (speed1 + omega * (d_equ[1] - speed1));//obstacles[jj*nx + ii] ? speed3 :speed1
+                                          //+ omega
+                                          //* (d_equ[1] - speed1);
+  tmp_cells[2*(nx*ny) + ii + jj*nx] = (mask3) * speed4 + (1-mask3) * (speed2 + omega * (d_equ[2] - speed2));//obstacles[jj*nx + ii] ? speed4 :speed2//
+                                          // + omega
+                                          // * (d_equ[2] - speed2);
+  tmp_cells[3*(nx*ny) + ii + jj*nx] = (mask3) * speed1 + (1-mask3) * (speed3 + omega * (d_equ[3] - speed3));//obstacles[jj*nx + ii] ? speed1 :speed3//
+                                          // + omega
+                                          // * (d_equ[3] - speed3);
+  tmp_cells[4*(nx*ny) + ii + jj*nx] = (mask3) * speed2 + (1-mask3) * (speed4 + omega * (d_equ[4] - speed4));//obstacles[jj*nx + ii] ? speed2 :speed4//
+                                          // + omega
+                                          // * (d_equ[4] - speed4);
+  tmp_cells[5*(nx*ny) + ii + jj*nx] = (mask3) * speed7 + (1-mask3) * (speed5 + omega * (d_equ[5] - speed5));//obstacles[jj*nx + ii] ? speed7 :speed5 //
+                                          // + omega
+                                          // * (d_equ[5] - speed5);
+  tmp_cells[6*(nx*ny) + ii + jj*nx] = (mask3) * speed8 + (1-mask3) * (speed6 + omega * (d_equ[6] - speed6));//obstacles[jj*nx + ii] ? speed8 :speed6//
+                                          // + omega
+                                          // * (d_equ[6] - speed6);
+  tmp_cells[7*(nx*ny) + ii + jj*nx] = (mask3) * speed5 + (1-mask3) * (speed7 + omega * (d_equ[7] - speed7));//obstacles[jj*nx + ii] ? speed5 :speed7//
+                                          // + omega
+                                          // * (d_equ[7] - speed7);
+  tmp_cells[8*(nx*ny) + ii + jj*nx] = (mask3) * speed6 + (1-mask3) * (speed8 + omega * (d_equ[8] - speed8));//obstacles[jj*nx + ii] ? speed6 :speed8//
+                                          // + omega
+                                          // * (d_equ[8] - speed8);
 
-  local_u[local_idX + (num_wrk_itemsX * local_idY)] = obstacles[ii + jj*nx] ? 0.f : (float)pow(((u_x * u_x) + (u_y * u_y)), 0.5f);
-    
-  for (int stride = (num_wrk_itemsX * num_wrk_itemsY)/2; stride>0; stride /=2)
+  local_u[local_idX + (num_wrk_itemsX * local_idY)] =(float)(1-mask3)*(float)pow(((u_x * u_x) + (u_y * u_y)), 0.5f);
+  
+    // Loop for computing localSums : divide WorkGroup into 2 parts
+  for (uint stride = (num_wrk_itemsX * num_wrk_itemsY)/2; stride>0; stride /=2)
   {
+      // Waiting for each 2x2 addition into given workgroup
       barrier(CLK_LOCAL_MEM_FENCE);
 
+      // Add elements 2 by 2 between local_id and local_id + stride
       if (local_idX + (num_wrk_itemsX * local_idY) < stride){
         local_u[local_idX + (num_wrk_itemsX * local_idY)] +=  local_u[local_idX + stride + (num_wrk_itemsX * (local_idY))];
       }
   }
 
-  if (local_idX == 0 && local_idY == 0){
+  // Write result into partialSums[nWorkGroups]
+  if (local_idX + (num_wrk_itemsX * local_idY) == 0){
     partial_u[group_idX + ((nx / num_wrk_itemsX) * group_idY)] = local_u[0]; 
   }
- 
+    
+
+  
 }
 
 kernel void av_velocity(global float* cells,
@@ -239,7 +235,7 @@ kernel void av_velocity(global float* cells,
   int num_wrk_itemsY = get_local_size(1);
   int group_idX = get_group_id(0);
   int group_idY = get_group_id(1);
-  
+  local_u[local_idX + (num_wrk_itemsX * local_idY)] = 0.f;
  /* ignore occupied cells */
   if (!obstacles[ii + jj*nx])
   {
@@ -253,53 +249,34 @@ kernel void av_velocity(global float* cells,
     }
 
     /* x-component of velocity */
-    float u_x = (cells[(nx * ny) + ii + jj*nx]
-                  + cells[5*(nx * ny) + ii + jj*nx]
-                  + cells[8*(nx * ny) + ii + jj*nx]
-                  - (cells[3*(nx * ny) + ii + jj*nx]
-                      + cells[6*(nx * ny) + ii + jj*nx]
-                      + cells[7*(nx * ny) + ii + jj*nx]))
+    float u_x = (cells[1*(nx*ny) + ii + jj*nx]
+                  + cells[5*(nx*ny) + ii + jj*nx]
+                  + cells[8*(nx*ny) + ii + jj*nx]
+                  - (cells[3*(nx*ny) + ii + jj*nx]
+                      + cells[6*(nx*ny) + ii + jj*nx]
+                      + cells[7*(nx*ny) + ii + jj*nx]))
                   / local_density;
     /* compute y velocity component */
-    float u_y = (cells[2*(nx * ny) + ii + jj*nx]
-                  + cells[5*(nx * ny) + ii + jj*nx]
-                  + cells[6*(nx * ny) + ii + jj*nx]
-                  - (cells[4*(nx * ny) + ii + jj*nx]
-                      + cells[7*(nx * ny) + ii + jj*nx]
-                      + cells[8*(nx * ny) + ii + jj*nx]))
+    float u_y = (cells[2*(nx*ny) + ii + jj*nx]
+                  + cells[5*(nx*ny) + ii + jj*nx]
+                  + cells[6*(nx*ny) + ii + jj*nx]
+                  - (cells[4*(nx*ny) + ii + jj*nx]
+                      + cells[7*(nx*ny) + ii + jj*nx]
+                      + cells[8*(nx*ny) + ii + jj*nx]))
                   / local_density;
     /* accumulate the norm of x- and y- velocity components */
     local_u[local_idX + (num_wrk_itemsX * local_idY)] = (float)pow(((u_x * u_x) + (u_y * u_y)), 0.5f);
-    for (uint stride = (num_wrk_itemsX * num_wrk_itemsY)/2; stride>0; stride /=2)
-    {
-        barrier(CLK_LOCAL_MEM_FENCE);
-
-        if (local_idX + (num_wrk_itemsX * local_idY) < stride){
-          local_u[local_idX + (num_wrk_itemsX * local_idY)] +=  local_u[local_idX + stride + (num_wrk_itemsX * (local_idY))];
-        }
-    }
-
-    if (local_idX == 1 && local_idY == 1){
-      partial_u[group_idX + ((nx / num_wrk_itemsX) * group_idY)] = local_u[0]; 
-    }
   }
+
+    float uSum;
+
+    if (local_idX == 1 && local_idY == 1) {
+      uSum = 0.f;
+      for (int i=0; i<num_wrk_itemsX * num_wrk_itemsY; i++) {
+          uSum += local_u[i];             
+      }
+      partial_u[group_idX + ((nx / num_wrk_itemsX) * group_idY)] = uSum;                                       
+   }
+
+  
 }
-
-// kernel void global_reduction(global float* velocities,
-//                    global float* av_vels,
-//                    const float tot_cells,
-//                    const int num_wkg) {
-
-//   const int iteration = get_global_id(0);
-//   const int local_id = get_local_id(0);
-
-//   float vel = 0.f;
-
-//   if (local_id == 0) {
-//     for (int group_id = 0; group_id < num_wkg; group_id++) {
-//       vel += velocities[(group_id) + (iteration * num_wkg)];
-//     }
-//     av_vels[iteration] = vel / tot_cells;
-//   }
-
-// }

@@ -253,7 +253,6 @@ float timestep_first(const t_param params, t_ocl ocl)
   cl_int err;
   accelerate_flow_first(params, ocl);
   float av = propagate_first(params, ocl);
-  printf("time 1 tot_u: %f\ntot_cells: %d\n", av, params.tot_cells);
 
   return av;
 }
@@ -263,7 +262,6 @@ float timestep_second(const t_param params, t_ocl ocl)
   cl_int err;
   accelerate_flow_second(params, ocl);
   float av = propagate_second(params, ocl);
-    printf("time 2 tot_u: %f\ntot_cells: %d\n", av, params.tot_cells);
 
   return av;
 }
@@ -357,10 +355,6 @@ float propagate_first(const t_param params, t_ocl ocl)
   err = clEnqueueNDRangeKernel(ocl.queue, ocl.propagate,
                                2, NULL, global, local, 0, NULL, NULL);
   checkError(err, "enqueueing propagate kernel", __LINE__);
-
-  // // Wait for kernel to finish
-  // err = clFinish(ocl.queue);
-  // checkError(err, "waiting for propagate kernel", __LINE__);
 
   err = clEnqueueReadBuffer(
     ocl.queue, ocl.partial_u, CL_TRUE, 0,
@@ -983,3 +977,4 @@ cl_device_id selectOpenCLDevice()
 
   return devices[device_index];
 }
+  
