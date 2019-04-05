@@ -54,8 +54,8 @@ kernel void propagate(global float* cells,
   const int ii = get_global_id(0);
   const int jj = get_global_id(1);
   /* compute weighting factors */
-  float w1 = density * accel / 9.0;
-  float w2 = density * accel / 36.0;
+  float w1accel = density * accel / 9.0;
+  float w2accel = density * accel / 36.0;
 
   /* modify the 2nd row of the grid */
   // int jj = ny - 2;
@@ -66,19 +66,19 @@ kernel void propagate(global float* cells,
   /* if the cell is not occupied and
   ** we don't send a negative density */
   bool condition = !obstacles[ii + jj* nx]
-      && (cells[3*(nx * ny) + ii + jj*nx] - w1) > 0.f
-      && (cells[6*(nx * ny) + ii + jj*nx] - w2) > 0.f
-      && (cells[7*(nx * ny) + ii + jj*nx] - w2) > 0.f
+      && (cells[3*(nx * ny) + ii + jj*nx] - w1accel) > 0.f
+      && (cells[6*(nx * ny) + ii + jj*nx] - w2accel) > 0.f
+      && (cells[7*(nx * ny) + ii + jj*nx] - w2accel) > 0.f
       && jj == ny - 2;
 
     /* increase 'east-side' densities */
-    cells[1*(nx * ny) + ii + jj*nx] += condition * w1;
-    cells[5*(nx * ny) + ii + jj*nx] += condition * w2;
-    cells[8*(nx * ny) + ii + jj*nx] += condition * w2;
+    cells[1*(nx * ny) + ii + jj*nx] += condition * w1accel;
+    cells[5*(nx * ny) + ii + jj*nx] += condition * w2accel;
+    cells[8*(nx * ny) + ii + jj*nx] += condition * w2accel;
     /* decrease 'west-side' densities */
-    cells[3*(nx * ny) + ii + jj*nx] -= condition * w1;
-    cells[6*(nx * ny) + ii + jj*nx] -= condition * w2;
-    cells[7*(nx * ny) + ii + jj*nx] -= condition * w2;
+    cells[3*(nx * ny) + ii + jj*nx] -= condition * w1accel;
+    cells[6*(nx * ny) + ii + jj*nx] -= condition * w2accel;
+    cells[7*(nx * ny) + ii + jj*nx] -= condition * w2accel;
   /* determine indices of axis-direction neighbours
   ** respecting periodic boundary conditions (wrap around) */
   const int y_n = (jj + 1) % ny;
