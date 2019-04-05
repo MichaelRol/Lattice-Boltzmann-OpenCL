@@ -247,7 +247,6 @@ int main(int argc, char* argv[])
 
 float timestep_first(const t_param params, t_ocl ocl)
 {
-  cl_int err;
   accelerate_flow_first(params, ocl);
   float av = propagate_first(params, ocl);
 
@@ -256,7 +255,6 @@ float timestep_first(const t_param params, t_ocl ocl)
 
 float timestep_second(const t_param params, t_ocl ocl)
 {
-  cl_int err;
   accelerate_flow_second(params, ocl);
   float av = propagate_second(params, ocl);
 
