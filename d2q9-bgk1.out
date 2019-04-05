@@ -1,8 +1,20 @@
 Running on host: node46-001
-Time is: Fri Apr  5 16:33:55 BST 2019
+Time is: Fri Apr  5 16:46:25 BST 2019
 Directory is: /newhome/mr16338/Lattice-Boltzmann-OpenCL
-PBS job ID is: 8298940.master.cm.cluster
+PBS job ID is: 8298960.master.cm.cluster
 This jobs runs on the following machines: node46-001
 GPU selected: 0
 
-/cm/local/apps/torque/4.2.4.1/spool/mom_priv/jobs/8298940.master.cm.cluster.SC: line 28: ./d2q9-bgk: No such file or directory
+
+Available OpenCL devices:
+ 0: Tesla K20m
+ 1: Tesla K20m
+
+Selected OpenCL device:
+-> Tesla K20m (index=0)
+
+==done==
+Reynolds number:		9.720956802368E+00
+Elapsed time:			1.796848 (s)
+Elapsed user CPU time:		2.720586 (s)
+Elapsed system CPU time:	0.286956 (s)
