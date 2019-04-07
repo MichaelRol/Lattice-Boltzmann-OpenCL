@@ -169,33 +169,15 @@ kernel void propagate(global float* cells,
 
     /* relaxation step */
   int mask3 = obstacles[jj*nx + ii];
-  tmp_cells[0*(nx*ny) + ii + jj*nx] = (mask3) * speed0 + (1-mask3) * (speed0 + omega * (d_equ[0] - speed0));//obstacles[jj*nx + ii] ? 0.f :obstacles[jj*nx + ii] ? speed0 :speed0
-                                          // + omega
-                                          // * (d_equ[0] - speed0);
-  tmp_cells[1*(nx*ny) + ii + jj*nx] = (mask3) * speed3 + (1-mask3) * (speed1 + omega * (d_equ[1] - speed1));//obstacles[jj*nx + ii] ? speed3 :speed1
-                                          //+ omega
-                                          //* (d_equ[1] - speed1);
-  tmp_cells[2*(nx*ny) + ii + jj*nx] = (mask3) * speed4 + (1-mask3) * (speed2 + omega * (d_equ[2] - speed2));//obstacles[jj*nx + ii] ? speed4 :speed2//
-                                          // + omega
-                                          // * (d_equ[2] - speed2);
-  tmp_cells[3*(nx*ny) + ii + jj*nx] = (mask3) * speed1 + (1-mask3) * (speed3 + omega * (d_equ[3] - speed3));//obstacles[jj*nx + ii] ? speed1 :speed3//
-                                          // + omega
-                                          // * (d_equ[3] - speed3);
-  tmp_cells[4*(nx*ny) + ii + jj*nx] = (mask3) * speed2 + (1-mask3) * (speed4 + omega * (d_equ[4] - speed4));//obstacles[jj*nx + ii] ? speed2 :speed4//
-                                          // + omega
-                                          // * (d_equ[4] - speed4);
-  tmp_cells[5*(nx*ny) + ii + jj*nx] = (mask3) * speed7 + (1-mask3) * (speed5 + omega * (d_equ[5] - speed5));//obstacles[jj*nx + ii] ? speed7 :speed5 //
-                                          // + omega
-                                          // * (d_equ[5] - speed5);
-  tmp_cells[6*(nx*ny) + ii + jj*nx] = (mask3) * speed8 + (1-mask3) * (speed6 + omega * (d_equ[6] - speed6));//obstacles[jj*nx + ii] ? speed8 :speed6//
-                                          // + omega
-                                          // * (d_equ[6] - speed6);
-  tmp_cells[7*(nx*ny) + ii + jj*nx] = (mask3) * speed5 + (1-mask3) * (speed7 + omega * (d_equ[7] - speed7));//obstacles[jj*nx + ii] ? speed5 :speed7//
-                                          // + omega
-                                          // * (d_equ[7] - speed7);
-  tmp_cells[8*(nx*ny) + ii + jj*nx] = (mask3) * speed6 + (1-mask3) * (speed8 + omega * (d_equ[8] - speed8));//obstacles[jj*nx + ii] ? speed6 :speed8//
-                                          // + omega
-                                          // * (d_equ[8] - speed8);
+  tmp_cells[0*(nx*ny) + ii + jj*nx] = (mask3) * speed0 + (1-mask3) * (speed0 + omega * (d_equ[0] - speed0));
+  tmp_cells[1*(nx*ny) + ii + jj*nx] = (mask3) * speed3 + (1-mask3) * (speed1 + omega * (d_equ[1] - speed1));
+  tmp_cells[2*(nx*ny) + ii + jj*nx] = (mask3) * speed4 + (1-mask3) * (speed2 + omega * (d_equ[2] - speed2));
+  tmp_cells[3*(nx*ny) + ii + jj*nx] = (mask3) * speed1 + (1-mask3) * (speed3 + omega * (d_equ[3] - speed3));
+  tmp_cells[4*(nx*ny) + ii + jj*nx] = (mask3) * speed2 + (1-mask3) * (speed4 + omega * (d_equ[4] - speed4));
+  tmp_cells[5*(nx*ny) + ii + jj*nx] = (mask3) * speed7 + (1-mask3) * (speed5 + omega * (d_equ[5] - speed5));
+  tmp_cells[6*(nx*ny) + ii + jj*nx] = (mask3) * speed8 + (1-mask3) * (speed6 + omega * (d_equ[6] - speed6));
+  tmp_cells[7*(nx*ny) + ii + jj*nx] = (mask3) * speed5 + (1-mask3) * (speed7 + omega * (d_equ[7] - speed7));
+  tmp_cells[8*(nx*ny) + ii + jj*nx] = (mask3) * speed6 + (1-mask3) * (speed8 + omega * (d_equ[8] - speed8));
 
   local_u[local_idX + (num_wrk_itemsX * local_idY)] =(float)(1-mask3)*(float)pow(((u_x * u_x) + (u_y * u_y)), 0.5f);
   
@@ -215,8 +197,6 @@ kernel void propagate(global float* cells,
   if (local_idX + (num_wrk_itemsX * local_idY) == 0){
     partial_u[group_idX + ((nx / num_wrk_itemsX) * group_idY)] = local_u[0]; 
   }
-    
-
   
 }
 
